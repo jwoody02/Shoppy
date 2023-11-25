@@ -10,7 +10,7 @@ import UIKit
 import Buy
 import Pay
 
-final class ClientQuery {
+public final class ClientQuery {
 
     static let maxImageDimension = Int32(UIScreen.main.bounds.width)
     

@@ -9,14 +9,14 @@ import Foundation
 import Buy
 import Pay
 
-struct ClientConfig {
+public struct ClientConfig {
     var shopDomain: String
     var apiKey: String
     var merchantID: String
     var locale: Locale
 }
 
-final class Client {
+public final class Client {
     /// New Initializable Shared Client
     /// Usage:
     ///
@@ -30,7 +30,7 @@ final class Client {
     ///
 
 
-    static var shared: Client?
+    public static var shared: Client?
 
     private let client: Graph.Client
     public var config: ClientConfig
@@ -39,7 +39,7 @@ final class Client {
     // ----------------------------------
     //  MARK: - Init -
     //
-    init(config: ClientConfig) {
+    public init(config: ClientConfig) {
         self.config = config
         self.client = Graph.Client(shopDomain: config.shopDomain, apiKey: config.apiKey, locale: config.locale)
         self.client.cachePolicy = .cacheFirst(expireIn: 3600)
