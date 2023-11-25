@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "mobile-buy-sdk-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Shopify/mobile-buy-sdk-ios.git",
+      "state" : {
+        "revision" : "0be47123f0cd058f1e9207138856b2419d423ebf",
+        "version" : "11.2.0"
+      }
+    }
+  ],
+  "version" : 2
+}
