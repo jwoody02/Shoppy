@@ -10,11 +10,19 @@ import Buy
 import Pay
 
 public struct ClientConfig {
-    var shopDomain: String
-    var apiKey: String
-    var merchantID: String
-    var locale: Locale
+    public var shopDomain: String
+    public var apiKey: String
+    public var merchantID: String
+    public var locale: Locale
+
+    public init(shopDomain: String, apiKey: String, merchantID: String, locale: Locale) {
+        self.shopDomain = shopDomain
+        self.apiKey = apiKey
+        self.merchantID = merchantID
+        self.locale = locale
+    }
 }
+
 
 public final class Client {
     /// New Initializable Shared Client
