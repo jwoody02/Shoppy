@@ -160,6 +160,97 @@ public final class ClientQuery {
             }
         }
     }
+    // ----------------------------------
+    //  MARK: - Cart -
+    //
+    static func mutationForCreateCart(with cartItems: [CartItem], buyer identity: Storefront.CartBuyerIdentityInput?) -> Storefront.MutationQuery {
+        var linesInput: [Storefront.CartLineInput] = []
+        let cartInput: Storefront.CartInput
+        for item in cartItems {
+            let id = GraphQL.ID(rawValue: item.variant.id)
+            let quantity = Int32(item.quantity)
+            linesInput.append(.create(merchandiseId: id, quantity: Input(orNull: quantity)))
+        }
+        
+        if let identity = identity {
+            cartInput = Storefront.CartInput.create(
+                lines: .value(linesInput), buyerIdentity: .value(identity)
+            )
+        } else {
+            cartInput = Storefront.CartInput.create(
+                lines: .value(linesInput)
+            )
+        }
+        
+        return Storefront.buildMutation { $0
+            .cartCreate(input: cartInput) { $0
+                .cart { $0
+                    .id()
+                    .checkoutUrl()
+                }
+                .userErrors { $0
+                    .code()
+                    .field()
+                    .message()
+                }
+            }
+        }
+    }
+    
+    static func mutationForCartAddLineItem(cartid: String, item: CartItem) -> Storefront.MutationQuery {
+        let id = GraphQL.ID(rawValue: item.variant.id)
+        let quantity = Int32(item.quantity)
+        let lineItem = Storefront.CartLineInput.create(merchandiseId: id, quantity: Input(orNull: quantity))
+        return Storefront.buildMutation { $0
+            .cartLinesAdd(lines: [lineItem], cartId: GraphQL.ID(rawValue: cartid)) { $0
+                .cart { $0
+                    .id()
+                    .checkoutUrl()
+                }
+                .userErrors { $0
+                    .code()
+                    .field()
+                    .message()
+                }
+            }
+        }
+    }
+    
+    static func mutationForCartRemoveLineItem(cartid: String, item: CartItem) -> Storefront.MutationQuery {
+        let id = GraphQL.ID(rawValue: item.variant.id)
+        return Storefront.buildMutation { $0
+            .cartLinesRemove(cartId: GraphQL.ID(rawValue:cartid), lineIds: [id]) { $0
+                .cart { $0
+                    .id()
+                    .checkoutUrl()
+                }
+                .userErrors { $0
+                    .code()
+                    .field()
+                    .message()
+                }
+            }
+        }
+    }
+    
+    static func mutationForCartUpdateLineItem(cartid: String, item: CartItem, quantity: Int) -> Storefront.MutationQuery {
+        let id = GraphQL.ID(rawValue: item.variant.id)
+        let lineItem = Storefront.CartLineUpdateInput.create(id: id, quantity: Input(orNull: Int32(quantity)))
+        return Storefront.buildMutation { $0
+            .cartLinesUpdate(cartId: GraphQL.ID(rawValue:cartid), lines: [lineItem]) { $0
+                .cart { $0
+                    .id()
+                    .checkoutUrl()
+                }
+                .userErrors { $0
+                    .code()
+                    .field()
+                    .message()
+                }
+            }
+        }
+    }
+    
     
     // ----------------------------------
     //  MARK: - Checkout -
