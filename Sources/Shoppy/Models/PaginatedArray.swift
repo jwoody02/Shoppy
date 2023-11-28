@@ -42,4 +42,8 @@ public struct PageableArray<T: ViewModel> {
         self.items.append(contentsOf: pageableArray.items)
         self.pageInfo = pageableArray.pageInfo
     }
+    
+    public func getItems() -> [T] {
+        return items
+    }
 }
