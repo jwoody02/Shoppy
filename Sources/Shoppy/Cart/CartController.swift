@@ -7,6 +7,7 @@
 
 
 import Foundation
+import Buy
 
 
 extension Notification.Name {
@@ -44,11 +45,23 @@ class CartController {
     }()
     
     public var checkoutUrl: URL?
-        public var checkoutId: String? {
-            didSet {
-                self.saveCheckoutInfo()
-            }
+    public var checkoutId: String? {
+        didSet {
+            self.saveCheckoutInfo()
         }
+    }
+    
+    public enum CartState {
+        case idle
+        case updating
+        case creatingCheckout
+    }
+
+    public private(set) var state: CartState = .idle {
+        didSet {
+            notifyCartStateChange()
+        }
+    }
     
     // ----------------------------------
     //  MARK: - Init -
@@ -166,33 +179,42 @@ class CartController {
     //  MARK: - State Changes -
     //
     private func itemsChanged() {
+        self.state = .updating
         self.setNeedsFlush()
         self.postItemsChangedNotification()
-        
+
         if let checkoutId = self.checkoutId {
             // Update existing checkout
-            Client.shared?.updateCartLineItems(id: checkoutId, with: self.items) { id, url in
-                if let _ = id, let _ = url {
-                    self.checkoutUrl = url
-                    self.checkoutId = id
-                    self.saveCheckoutInfo()
-                    print("Updated cart to consist of the items \(self.items.map { $0.product.title }) ")
+            Client.shared?.updateCartLineItems(id: checkoutId, with: self.items) { [weak self] id, url in
+                if let id = id, let _ = url {
+                    self?.checkoutUrl = url
+                    self?.checkoutId = id
+                    self?.saveCheckoutInfo()
+                    print("Updated cart with id '\(id)', saving to disk.")
                 } else {
                     print("Shoppy Error: Could not update cart")
                 }
-                
+                self?.state = .idle
             }
         } else {
+            self.state = .creatingCheckout
+            var buyerIdentity: Storefront.CartBuyerIdentityInput? = nil
+            if let authToken = AccountManager.shared.currentAuthToken() {
+                buyerIdentity = .create(customerAccessToken: .value(authToken))
+                print("Associating cart with customer \(authToken)")
+            }
+            
             // Create new checkout
-            Client.shared?.createCart(with: self.items, buyer: nil) { id, url in
+            Client.shared?.createCart(with: self.items, buyer: buyerIdentity) { [weak self] id, url in
                 if let id = id, let url = url {
-                    self.checkoutUrl = url
-                    self.checkoutId = id
-                    self.saveCheckoutInfo()
-                    print("Created cart with id \(id), saving to disk.")
+                    self?.checkoutUrl = url
+                    self?.checkoutId = id
+                    self?.saveCheckoutInfo()
+                    print("Created cart with id '\(id)', saving to disk.")
                 } else {
                     print("Shoppy Error: Could not create cart")
                 }
+                self?.state = .idle
             }
         }
     }
@@ -246,4 +268,12 @@ class CartController {
         self.items.remove(at: index)
         self.itemsChanged()
     }
+    
+    private func notifyCartStateChange() {
+        NotificationCenter.default.post(name: .CartControllerStateDidChange, object: self)
+    }
+}
+
+extension Notification.Name {
+    static let CartControllerStateDidChange = Notification.Name("CartControllerStateDidChange")
 }
