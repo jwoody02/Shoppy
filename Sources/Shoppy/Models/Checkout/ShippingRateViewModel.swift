@@ -15,9 +15,9 @@ public final class ShippingRateViewModel: ViewModel {
     
     public let model:  ModelType
     
-    let handle: String
-    let title:  String
-    let price:  Decimal
+    public let handle: String
+    public let title:  String
+    public let price:  Decimal
     
     // ----------------------------------
     //  MARK: - Init -

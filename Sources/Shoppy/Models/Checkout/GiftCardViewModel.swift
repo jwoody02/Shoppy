@@ -15,10 +15,10 @@ public final class GiftCardViewModel: ViewModel {
     
     public let model:  ModelType
     
-    let id:             String
-    let balance:        Decimal
-    let amountUsed:     Decimal
-    let lastCharacters: String
+    public let id:             String
+    public let balance:        Decimal
+    public let amountUsed:     Decimal
+    public let lastCharacters: String
     
     // ----------------------------------
     //  MARK: - Init -

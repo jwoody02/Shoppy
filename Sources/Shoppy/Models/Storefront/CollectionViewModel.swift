@@ -13,13 +13,13 @@ public final class CollectionViewModel: ViewModel {
     public typealias ModelType = Storefront.CollectionEdge
     
     public let model:       ModelType
-    let cursor:      String
+    public let cursor:      String
     
-    let id:          String
-    let title:       String
-    let description: String
-    let imageURL:    URL?
-    var products:    PageableArray<ProductViewModel>
+    public let id:          String
+    public let title:       String
+    public let description: String
+    public let imageURL:    URL?
+    public var products:    PageableArray<ProductViewModel>
     
     // ----------------------------------
     //  MARK: - Init -

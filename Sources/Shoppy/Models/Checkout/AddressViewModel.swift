@@ -15,17 +15,17 @@ public final class AddressViewModel: ViewModel {
     
     public let model:  ModelType
     
-    let firstName:   String?
-    let lastName:    String?
-    let phone:       String?
+    public let firstName:   String?
+    public let lastName:    String?
+    public let phone:       String?
     
-    let address1:    String?
-    let address2:    String?
-    let city:        String?
-    let country:     String?
-    let countryCode: String?
-    let province:    String?
-    let zip:         String?
+    public let address1:    String?
+    public let address2:    String?
+    public let city:        String?
+    public let country:     String?
+    public let countryCode: String?
+    public let province:    String?
+    public let zip:         String?
     
     // ----------------------------------
     //  MARK: - Init -

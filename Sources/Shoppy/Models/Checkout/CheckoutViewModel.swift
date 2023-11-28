@@ -20,33 +20,33 @@ public final class CheckoutViewModel: ViewModel {
         case creditCard = "credit_card"
     }
     
-    let id:               String
-    let ready:            Bool
-    let requiresShipping: Bool
-    let taxesIncluded:    Bool
-    let shippingAddress:  AddressViewModel?
-    let shippingRate:     ShippingRateViewModel?
+    public let id:               String
+    public let ready:            Bool
+    public let requiresShipping: Bool
+    public let taxesIncluded:    Bool
+    public let shippingAddress:  AddressViewModel?
+    public let shippingRate:     ShippingRateViewModel?
     
-    let note:             String?
-    let webURL:           URL
+    public let note:             String?
+    public let webURL:           URL
     
-    let giftCards:        [GiftCardViewModel]
-    let lineItems:        [LineItemViewModel]
-    let currencyCode:     String
-    let subtotalPrice:    Decimal
-    let totalTax:         Decimal
-    let totalDuties:      Decimal?
-    let totalPrice:       Decimal
-    let paymentDue:       Decimal
+    public let giftCards:        [GiftCardViewModel]
+    public let lineItems:        [LineItemViewModel]
+    public let currencyCode:     String
+    public let subtotalPrice:    Decimal
+    public let totalTax:         Decimal
+    public let totalDuties:      Decimal?
+    public let totalPrice:       Decimal
+    public let paymentDue:       Decimal
     
-    let shippingDiscountName:   String
-    let totalShippingDiscounts: Decimal
+    public let shippingDiscountName:   String
+    public let totalShippingDiscounts: Decimal
     
-    let lineItemDiscountName:   String
-    let totalLineItemDiscounts: Decimal
-    let totalDiscounts:         Decimal
+    public let lineItemDiscountName:   String
+    public let totalLineItemDiscounts: Decimal
+    public let totalDiscounts:         Decimal
     
-    let shippingDiscountAllocations: [DiscountAllocationViewModel]
+    public let shippingDiscountAllocations: [DiscountAllocationViewModel]
     
     // ----------------------------------
     //  MARK: - Init -

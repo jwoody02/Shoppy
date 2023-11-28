@@ -15,16 +15,16 @@ public final class CreditCardViewModel: ViewModel {
     
     public let model:  ModelType
     
-    let firstName:    String?
-    let lastName:     String?
+    public let firstName:    String?
+    public let lastName:     String?
     
-    let firstDigits:  String?
-    let lastDigits:   String?
-    let maskedDigits: String?
+    public let firstDigits:  String?
+    public let lastDigits:   String?
+    public let maskedDigits: String?
     
-    let expMonth:     Int?
-    let expYear:      Int?
-    let brand:        String?
+    public let expMonth:     Int?
+    public let expYear:      Int?
+    public let brand:        String?
     
     // ----------------------------------
     //  MARK: - Init -

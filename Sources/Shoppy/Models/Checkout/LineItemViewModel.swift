@@ -14,14 +14,14 @@ public final class LineItemViewModel: ViewModel {
     public typealias ModelType = Storefront.CheckoutLineItemEdge
     
     public let model:    ModelType
-    let cursor:   String
+    public let cursor:   String
     
-    let variantID:           String?
-    let title:               String
-    let quantity:            Int
-    let individualPrice:     Decimal
-    let totalPrice:          Decimal
-    let discountAllocations: [DiscountAllocationViewModel]
+    public let variantID:           String?
+    public let title:               String
+    public let quantity:            Int
+    public let individualPrice:     Decimal
+    public let totalPrice:          Decimal
+    public let discountAllocations: [DiscountAllocationViewModel]
     
     // ----------------------------------
     //  MARK: - Init -

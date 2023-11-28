@@ -15,8 +15,8 @@ public final class DiscountAllocationViewModel: ViewModel {
     
     public let model: ModelType
     
-    let amount:       Decimal
-    let currencyCode: String
+    public let amount:       Decimal
+    public let currencyCode: String
     let application:  DiscountApplication
     
     // ----------------------------------

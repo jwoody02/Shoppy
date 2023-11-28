@@ -15,13 +15,13 @@ public final class PaymentViewModel: ViewModel {
     
     public let model:  ModelType
     
-    let id:         String
-    let isReady:    Bool
-    let isTest:     Bool
-    let checkout:   CheckoutViewModel
-    let creditCard: CreditCardViewModel?
-    let amount:     Decimal
-    let error:      String?
+    public let id:         String
+    public let isReady:    Bool
+    public let isTest:     Bool
+    public let checkout:   CheckoutViewModel
+    public let creditCard: CreditCardViewModel?
+    public let amount:     Decimal
+    public let error:      String?
     
     // ----------------------------------
     //  MARK: - Init -
