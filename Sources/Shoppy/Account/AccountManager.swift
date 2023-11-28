@@ -14,7 +14,7 @@ protocol AccountManagerDelegate: AnyObject {
 
 public final class AccountManager {
 
-    static let shared = AccountManager()
+    public static let shared = AccountManager()
     weak var delegate: AccountManagerDelegate?
 
     private let tokenKey = "ShopifyAuthToken"
