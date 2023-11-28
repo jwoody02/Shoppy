@@ -25,7 +25,7 @@ public class ShopDataManager {
     
     // Fetch collections with pagination
     @discardableResult
-    public func fetchCollections(limit: Int = 25, completion: @escaping (PageableArray<CollectionViewModel>?) -> Void) -> Task? {
+    public func fetchCollections(limit: Int = 25, completion: @escaping (Bool) -> Void) -> Task? {
         return client?.fetchCollections(limit: limit, after: collectionCursor, productLimit: 25, productCursor: nil) { [weak self] result in
             guard let self = self else { return }
 
@@ -39,7 +39,12 @@ public class ShopDataManager {
                 }
             }
             NotificationCenter.default.post(name: ShopDataManager.collectionsUpdatedNotification, object: nil)
-            completion(result)
+            
+            if let _ = result {
+                completion(true)
+            } else {
+                completion(false)
+            }
         }
     }
 
