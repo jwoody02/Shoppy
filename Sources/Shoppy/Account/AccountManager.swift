@@ -18,10 +18,11 @@ class AccountManager {
     weak var delegate: AccountManagerDelegate?
 
     private let tokenKey = "ShopifyAuthToken"
+    private let expiryKey = "ShopifyAuthExpiry"
     private let userDefaults = UserDefaults.standard
 
     var isLoggedIn: Bool {
-        return authToken != nil
+        return authToken != nil && !isTokenExpired
     }
 
     private var authToken: String? {
@@ -30,42 +31,56 @@ class AccountManager {
         }
         set {
             userDefaults.set(newValue, forKey: tokenKey)
-            delegate?.accountManagerDidUpdateLoginStatus(self, isLoggedIn: newValue != nil)
+            delegate?.accountManagerDidUpdateLoginStatus(self, isLoggedIn: newValue != nil && !isTokenExpired)
         }
+    }
+
+    private var authTokenExpiry: Date? {
+        get {
+            return userDefaults.object(forKey: expiryKey) as? Date
+        }
+        set {
+            userDefaults.set(newValue, forKey: expiryKey)
+        }
+    }
+
+    private var isTokenExpired: Bool {
+        if let expiryDate = authTokenExpiry {
+            return Date() >= expiryDate
+        }
+        return true
     }
 
     private init() {}
 
-    func login(email: String, password: String, completion: @escaping (Bool) -> Void) {
-        // Login and save data
-        Client.shared?.login(email: email, password: password) { [weak self] token in
-            guard let self = self, let token = token else {
-                completion(false)
+    func login(email: String, password: String, completion: @escaping (Bool, Error?) -> Void) {
+        Client.shared?.login(email: email, password: password) { [weak self] (token, expiryDate) in
+            guard let self = self, let token = token, let expiryDate = expiryDate else {
+                completion(false, nil)
                 return
             }
             
             self.authToken = token
-            completion(true)
+            self.authTokenExpiry = expiryDate
+            completion(true, nil)
         }
     }
 
     func validateLogin(completion: @escaping (Bool) -> Void) {
-        completion(true)
-        // Placeholder for the actual implementation
-//        ShopifyClient.shared.validateToken(self.authToken) { isValid in
-//            completion(isValid)
-//            if !isValid {
-//                self.logout()
-//            }
-//        }
+        if isLoggedIn {
+            completion(true)
+        } else {
+            logout()
+            completion(false)
+        }
     }
 
     func logout() {
+        self.authToken = nil
         guard let auth = authToken else { return }
-        Client.shared?.logout(accessToken: auth) { [weak self] success in
+        Client.shared?.logout(accessToken: auth) { success in
             if success {
                 print("Successfully logged out")
-                self?.authToken = nil
             } else {
                 print("Error logging out")
             }

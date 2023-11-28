@@ -57,18 +57,18 @@ public final class Client {
     //  MARK: - Customers -
     //
     @discardableResult
-    func login(email: String, password: String, completion: @escaping (String?) -> Void) -> Task {
+    func login(email: String, password: String, completion: @escaping (String?, Date?) -> Void) -> Task {
         
         let mutation = ClientQuery.mutationForLogin(email: email, password: password)
         let task     = self.client.mutateGraphWith(mutation) { (mutation, error) in
             error.debugPrint()
             
             if let container = mutation?.customerAccessTokenCreate?.customerAccessToken {
-                completion(container.accessToken)
+                completion(container.accessToken, container.expiresAt)
             } else {
                 let errors = mutation?.customerAccessTokenCreate?.customerUserErrors ?? []
                 print("Failed to login customer: \(errors)")
-                completion(nil)
+                completion(nil, nil)
             }
         }
         
