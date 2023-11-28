@@ -12,7 +12,7 @@ protocol AccountManagerDelegate: AnyObject {
     func accountManagerDidUpdateLoginStatus(_ manager: AccountManager, isLoggedIn: Bool)
 }
 
-class AccountManager {
+public final class AccountManager {
 
     static let shared = AccountManager()
     weak var delegate: AccountManagerDelegate?

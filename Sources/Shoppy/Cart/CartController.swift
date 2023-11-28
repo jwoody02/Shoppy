@@ -14,7 +14,7 @@ extension Notification.Name {
     static let CartControllerItemsDidChange = Notification.Name("CartController.ItemsDidChange")
 }
 
-class CartController {
+public final class CartController {
     
     static let shared = CartController()
     
