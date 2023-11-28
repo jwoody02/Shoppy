@@ -14,9 +14,9 @@ public final class ImageViewModel: ViewModel {
     public typealias ModelType = Storefront.ImageEdge
     
     public let model:    ModelType
-    let cursor:   String
+    public let cursor:   String
     
-    let url:      URL
+    public let url:      URL
     
     // ----------------------------------
     //  MARK: - Init -

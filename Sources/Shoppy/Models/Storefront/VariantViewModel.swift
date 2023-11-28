@@ -14,11 +14,11 @@ public final class VariantViewModel: ViewModel {
     public typealias ModelType = Storefront.ProductVariantEdge
     
     public let model:  ModelType
-    let cursor: String
+    public let cursor: String
     
-    let id:     String
-    let title:  String
-    let price:  Decimal
+    public let id:     String
+    public let title:  String
+    public let price:  Decimal
     
     // ----------------------------------
     //  MARK: - Init -

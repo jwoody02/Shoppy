@@ -15,13 +15,13 @@ public final class CustomerViewModel: ViewModel {
     
     public let model:       ModelType
     
-    let id:          String
-    let displayName: String
-    let firstName:   String?
-    let lastName:    String?
-    let phoneNumber: String?
-    let email:       String?
-    let updatedAt:   Date
+    public let id:          String
+    public let displayName: String
+    public let firstName:   String?
+    public let lastName:    String?
+    public let phoneNumber: String?
+    public let email:       String?
+    public let updatedAt:   Date
     
     // ----------------------------------
     //  MARK: - Init -

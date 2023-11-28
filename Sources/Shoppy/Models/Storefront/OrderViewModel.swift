@@ -14,14 +14,14 @@ public final class OrderViewModel: ViewModel {
     public typealias ModelType = Storefront.OrderEdge
     
     public let model:                  ModelType
-    let cursor:                 String
+    public let cursor:                 String
     
-    let id:                     String
-    let number:                 Int
-    let email:                  String?
-    let currentTotalDuties:     Decimal?
-    let originalTotalDuties:    Decimal?
-    let totalPrice:             Decimal
+    public let id:                     String
+    public let number:                 Int
+    public let email:                  String?
+    public let currentTotalDuties:     Decimal?
+    public let originalTotalDuties:    Decimal?
+    public let totalPrice:             Decimal
     
     // ----------------------------------
     //  MARK: - Init -
