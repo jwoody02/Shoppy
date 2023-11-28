@@ -20,7 +20,7 @@ struct PageableArray<T: ViewModel> {
         return pageInfo.hasPreviousPage
     }
     
-    private var pageInfo: Storefront.PageInfo
+    public var pageInfo: Storefront.PageInfo
     
     // ----------------------------------
     //  MARK: - Init -
