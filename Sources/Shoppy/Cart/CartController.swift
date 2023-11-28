@@ -43,6 +43,13 @@ class CartController {
         return cartURL
     }()
     
+    public var checkoutUrl: URL?
+        public var checkoutId: String? {
+            didSet {
+                self.saveCheckoutInfo()
+            }
+        }
+    
     // ----------------------------------
     //  MARK: - Init -
     //
@@ -113,13 +120,81 @@ class CartController {
             }
         }
     }
+    // ----------------------------------
+    //  MARK: - Checkout Info Persistence -
+    //
+    private func saveCheckoutInfo() {
+        self.ioQueue.async {
+            do {
+                var checkoutInfo = [String: String]()
+                if let url = self.checkoutUrl {
+                    checkoutInfo["url"] = url.absoluteString
+                }
+                if let id = self.checkoutId {
+                    checkoutInfo["id"] = id
+                }
+                
+                let data = try JSONSerialization.data(withJSONObject: checkoutInfo, options: [])
+                let checkoutInfoURL = self.cartURL.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
+                try data.write(to: checkoutInfoURL, options: [.atomic])
+
+                print("Checkout information saved.")
+            } catch let error {
+                print("Failed to save checkout information: \(error)")
+            }
+        }
+    }
     
+    private func readCheckoutInfo() {
+        self.ioQueue.async {
+            let checkoutInfoURL = self.cartURL.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
+            do {
+                let data = try Data(contentsOf: checkoutInfoURL)
+                if let checkoutInfo = try JSONSerialization.jsonObject(with: data, options: []) as? [String: String] {
+                    DispatchQueue.main.async {
+                        self.checkoutUrl = URL(string: checkoutInfo["url"] ?? "")
+                        self.checkoutId = checkoutInfo["id"]
+                    }
+                }
+            } catch let error {
+                print("Failed to load checkout information: \(error)")
+            }
+        }
+    }
+
     // ----------------------------------
     //  MARK: - State Changes -
     //
     private func itemsChanged() {
         self.setNeedsFlush()
         self.postItemsChangedNotification()
+        
+        if let checkoutId = self.checkoutId {
+            // Update existing checkout
+            Client.shared?.updateCartLineItems(id: checkoutId, with: self.items) { id, url in
+                if let _ = id, let _ = url {
+                    self.checkoutUrl = url
+                    self.checkoutId = id
+                    self.saveCheckoutInfo()
+                    print("Updated cart to consist of the items \(self.items.map { $0.product.title }) ")
+                } else {
+                    print("Shoppy Error: Could not update cart")
+                }
+                
+            }
+        } else {
+            // Create new checkout
+            Client.shared?.createCart(with: self.items, buyer: nil) { id, url in
+                if let id = id, let url = url {
+                    self.checkoutUrl = url
+                    self.checkoutId = id
+                    self.saveCheckoutInfo()
+                    print("Created cart with id \(id), saving to disk.")
+                } else {
+                    print("Shoppy Error: Could not create cart")
+                }
+            }
+        }
     }
     
     // ----------------------------------

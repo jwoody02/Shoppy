@@ -319,6 +319,42 @@ public final class Client {
     }
     
     @discardableResult
+    func createCart(with cartItems: [CartItem], buyer identity: Storefront.CartBuyerIdentityInput?, completion: @escaping (String?, URL?) -> Void) -> Task {
+        let mutation = ClientQuery.mutationForCreateCart(with: cartItems, buyer: identity)
+        let task     = self.client.mutateGraphWith(mutation) { response, error in
+            error.debugPrint()
+            
+            if let checkoutUrl = response?.cartCreate?.cart?.checkoutUrl,
+               let checkoutId = response?.cartCreate?.cart?.id {
+                completion(checkoutId.rawValue, checkoutUrl)
+            } else {
+                completion(nil, nil)
+            }
+        }
+        
+        task.resume()
+        return task
+    }
+    
+    @discardableResult
+    func updateCartLineItems(id: String, with cartItems: [CartItem], completion: @escaping (String?, URL?) -> Void) -> Task {
+        let mutation = ClientQuery.mutationForCartUpdateLineItems(cartid: id, items: cartItems)
+        let task     = self.client.mutateGraphWith(mutation) { response, error in
+            error.debugPrint()
+            
+            if let checkoutUrl = response?.cartCreate?.cart?.checkoutUrl,
+               let checkoutId = response?.cartCreate?.cart?.id {
+                completion(checkoutId.rawValue, checkoutUrl)
+            } else {
+                completion(nil, nil)
+            }
+        }
+        
+        task.resume()
+        return task
+    }
+    
+    @discardableResult
     func pollForReadyCheckout(_ id: String, completion: @escaping (CheckoutViewModel?) -> Void) -> Task {
 
         let retry = Graph.RetryHandler<Storefront.QueryRoot>(endurance: .finite(30)) { response, error -> Bool in
