@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class VariantViewModel: ViewModel {
+public final class VariantViewModel: ViewModel {
     
-    typealias ModelType = Storefront.ProductVariantEdge
+    public typealias ModelType = Storefront.ProductVariantEdge
     
-    let model:  ModelType
+    public let model:  ModelType
     let cursor: String
     
     let id:     String
@@ -23,7 +23,7 @@ final class VariantViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model  = model
         self.cursor = model.cursor
         
@@ -34,5 +34,5 @@ final class VariantViewModel: ViewModel {
 }
 
 extension Storefront.ProductVariantEdge: ViewModeling {
-    typealias ViewModelType = VariantViewModel
+    public typealias ViewModelType = VariantViewModel
 }

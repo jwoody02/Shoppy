@@ -8,7 +8,7 @@
 
 import Buy
 
-struct PageableArray<T: ViewModel> {
+public struct PageableArray<T: ViewModel> {
     
     private(set) var items: [T]
     

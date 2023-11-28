@@ -22,11 +22,11 @@ struct Currency {
     }
 }
 
-final class ProductViewModel: ViewModel {
+public final class ProductViewModel: ViewModel {
     
-    typealias ModelType = Storefront.ProductEdge
+    public typealias ModelType = Storefront.ProductEdge
     
-    let model:    ModelType
+    public let model:    ModelType
     let cursor:   String
     
     let id:       String
@@ -39,7 +39,7 @@ final class ProductViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model    = model
         self.cursor   = model.cursor
         
@@ -67,5 +67,5 @@ final class ProductViewModel: ViewModel {
 }
 
 extension Storefront.ProductEdge: ViewModeling {
-    typealias ViewModelType = ProductViewModel
+    public typealias ViewModelType = ProductViewModel
 }

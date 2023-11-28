@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol ViewModeling {
+public protocol ViewModeling {
     
     associatedtype ViewModelType: ViewModel
     
@@ -16,14 +16,14 @@ protocol ViewModeling {
 
 extension ViewModeling where ViewModelType.ModelType == Self {
     
-    var viewModel: ViewModelType {
+    public var viewModel: ViewModelType {
         return ViewModelType(from: self)
     }
 }
 
 extension Array where Element: ViewModeling {
     
-    var viewModels: [Element.ViewModelType] {
+    public var viewModels: [Element.ViewModelType] {
         return self.map { $0.viewModel }
     }
 }

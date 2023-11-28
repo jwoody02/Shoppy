@@ -8,8 +8,8 @@
 import Foundation
 import Buy
 
-public final class ShopDataManager {
-    static let shared = ShopDataManager()
+public class ShopDataManager {
+    public static let shared = ShopDataManager()
 
     private var collections: [CollectionViewModel] = []
     private var productsByCollection: [String: [ProductViewModel]] = [:]
@@ -18,9 +18,14 @@ public final class ShopDataManager {
     private var collectionCursor: String?
     private let client: Client? = Client.shared
 
+    // Define notification names
+    static let collectionsUpdatedNotification = Notification.Name("ShopDataManagerCollectionsUpdated")
+    static let productsUpdatedNotification = Notification.Name("ShopDataManagerProductsUpdated")
+
+    
     // Fetch collections with pagination
     @discardableResult
-    func fetchCollections(limit: Int = 25, completion: @escaping (PageableArray<CollectionViewModel>?) -> Void) -> Task? {
+    public func fetchCollections(limit: Int = 25, completion: @escaping (PageableArray<CollectionViewModel>?) -> Void) -> Task? {
         return client?.fetchCollections(limit: limit, after: collectionCursor, productLimit: 25, productCursor: nil) { [weak self] result in
             guard let self = self else { return }
 
@@ -33,14 +38,14 @@ public final class ShopDataManager {
                     self.productCursorByCollection[$0.id] = nil
                 }
             }
-
+            NotificationCenter.default.post(name: ShopDataManager.collectionsUpdatedNotification, object: nil)
             completion(result)
         }
     }
 
     // Fetch products within a collection with pagination
     @discardableResult
-    func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, completion: @escaping (PageableArray<ProductViewModel>?) -> Void) -> Task? {
+    public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, completion: @escaping (PageableArray<ProductViewModel>?) -> Void) -> Task? {
         let currentCursor = productCursorByCollection[collection.id] ?? nil
         return client?.fetchProducts(in: collection, limit: limit, after: currentCursor) { [weak self] result in
             guard let self = self else { return }
@@ -51,13 +56,15 @@ public final class ShopDataManager {
                 // Update product cursor for this collection
                 self.productCursorByCollection[collection.id] = products.pageInfo.hasNextPage ? products.items.last?.cursor : nil
             }
-
+            NotificationCenter.default.post(name: ShopDataManager.productsUpdatedNotification, object: nil, userInfo: ["collectionId": collection.id])
+                
             completion(result)
         }
     }
 
     // Function to get products for a specific collection
-    func products(in collection: CollectionViewModel) -> [ProductViewModel]? {
+    public func products(in collection: CollectionViewModel) -> [ProductViewModel]? {
         return productsByCollection[collection.id]
     }
+    
 }

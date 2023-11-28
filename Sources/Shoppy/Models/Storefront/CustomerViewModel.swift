@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class CustomerViewModel: ViewModel {
+public final class CustomerViewModel: ViewModel {
     
-    typealias ModelType = Storefront.Customer
+    public typealias ModelType = Storefront.Customer
     
-    let model:       ModelType
+    public let model:       ModelType
     
     let id:          String
     let displayName: String
@@ -26,7 +26,7 @@ final class CustomerViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model       = model
         
         self.id          = model.id.rawValue
@@ -40,5 +40,5 @@ final class CustomerViewModel: ViewModel {
 }
 
 extension Storefront.Customer: ViewModeling {
-    typealias ViewModelType = CustomerViewModel
+    public typealias ViewModelType = CustomerViewModel
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol ViewModel: Serializable {
+public protocol ViewModel: Serializable {
     
     associatedtype ModelType: Serializable
     
@@ -21,14 +21,14 @@ protocol ViewModel: Serializable {
 //
 extension ViewModel {
     
-    static func deserialize(from representation: SerializedRepresentation) -> Self? {
+    public static func deserialize(from representation: SerializedRepresentation) -> Self? {
         if let model = ModelType.deserialize(from: representation) {
             return Self.init(from: model)
         }
         return nil
     }
     
-    func serialize() -> SerializedRepresentation {
+    public func serialize() -> SerializedRepresentation {
         return self.model.serialize()
     }
 }

@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class GiftCardViewModel: ViewModel {
+public final class GiftCardViewModel: ViewModel {
     
-    typealias ModelType = Storefront.AppliedGiftCard
+    public typealias ModelType = Storefront.AppliedGiftCard
     
-    let model:  ModelType
+    public let model:  ModelType
     
     let id:             String
     let balance:        Decimal
@@ -23,7 +23,7 @@ final class GiftCardViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model            = model
         
         self.id             = model.id.rawValue
@@ -34,5 +34,5 @@ final class GiftCardViewModel: ViewModel {
 }
 
 extension Storefront.AppliedGiftCard: ViewModeling {
-    typealias ViewModelType = GiftCardViewModel
+    public typealias ViewModelType = GiftCardViewModel
 }

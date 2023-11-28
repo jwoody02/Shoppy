@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class CheckoutViewModel: ViewModel {
+public final class CheckoutViewModel: ViewModel {
     
-    typealias ModelType = Storefront.Checkout
+    public typealias ModelType = Storefront.Checkout
     
-    let model:  ModelType
+    public let model:  ModelType
     
     enum PaymentType: String {
         case applePay   = "apple_pay"
@@ -51,7 +51,7 @@ final class CheckoutViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model            = model
         
         self.id               = model.id.rawValue
@@ -87,5 +87,5 @@ final class CheckoutViewModel: ViewModel {
 }
 
 extension Storefront.Checkout: ViewModeling {
-    typealias ViewModelType = CheckoutViewModel
+    public typealias ViewModelType = CheckoutViewModel
 }

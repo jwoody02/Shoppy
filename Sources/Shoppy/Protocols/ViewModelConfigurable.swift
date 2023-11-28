@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol ViewModelConfigurable {
+public protocol ViewModelConfigurable {
     
     associatedtype ViewModelType
     

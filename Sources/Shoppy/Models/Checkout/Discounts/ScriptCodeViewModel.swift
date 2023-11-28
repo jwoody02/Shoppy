@@ -9,22 +9,22 @@ import Foundation
 
 import Buy
 
-final class ScriptCodeViewModel: DiscountApplication, ViewModel {
+public final class ScriptCodeViewModel: DiscountApplication, ViewModel {
     
-    typealias ModelType = Storefront.ScriptDiscountApplication
+    public typealias ModelType = Storefront.ScriptDiscountApplication
     
-    let model: ModelType
+    public let model: ModelType
     let name:  String
     
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model = model
         self.name  = model.title
     }
 }
 
 extension Storefront.ScriptDiscountApplication: ViewModeling {
-    typealias ViewModelType = ScriptCodeViewModel
+    public typealias ViewModelType = ScriptCodeViewModel
 }

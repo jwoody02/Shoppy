@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class DiscountAllocationViewModel: ViewModel {
+public final class DiscountAllocationViewModel: ViewModel {
     
-    typealias ModelType = Storefront.DiscountAllocation
+    public typealias ModelType = Storefront.DiscountAllocation
     
-    let model: ModelType
+    public let model: ModelType
     
     let amount:       Decimal
     let currencyCode: String
@@ -22,7 +22,7 @@ final class DiscountAllocationViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model        = model
         
         self.amount       = model.allocatedAmount.amount
@@ -32,7 +32,7 @@ final class DiscountAllocationViewModel: ViewModel {
 }
 
 extension Storefront.DiscountAllocation: ViewModeling {
-    typealias ViewModelType = DiscountAllocationViewModel
+    public typealias ViewModelType = DiscountAllocationViewModel
 }
 
 extension Array where Element == DiscountAllocationViewModel {

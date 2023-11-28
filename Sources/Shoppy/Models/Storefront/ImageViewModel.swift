@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class ImageViewModel: ViewModel {
+public final class ImageViewModel: ViewModel {
     
-    typealias ModelType = Storefront.ImageEdge
+    public typealias ModelType = Storefront.ImageEdge
     
-    let model:    ModelType
+    public let model:    ModelType
     let cursor:   String
     
     let url:      URL
@@ -21,7 +21,7 @@ final class ImageViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model    = model
         self.cursor   = model.cursor
         
@@ -30,5 +30,5 @@ final class ImageViewModel: ViewModel {
 }
 
 extension Storefront.ImageEdge: ViewModeling {
-    typealias ViewModelType = ImageViewModel
+    public typealias ViewModelType = ImageViewModel
 }

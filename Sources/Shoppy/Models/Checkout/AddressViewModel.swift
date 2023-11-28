@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class AddressViewModel: ViewModel {
+public final class AddressViewModel: ViewModel {
     
-    typealias ModelType = Storefront.MailingAddress
+    public typealias ModelType = Storefront.MailingAddress
     
-    let model:  ModelType
+    public let model:  ModelType
     
     let firstName:   String?
     let lastName:    String?
@@ -30,7 +30,7 @@ final class AddressViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model       = model
         
         self.firstName   = model.firstName
@@ -48,5 +48,5 @@ final class AddressViewModel: ViewModel {
 }
 
 extension Storefront.MailingAddress: ViewModeling {
-    typealias ViewModelType = AddressViewModel
+    public typealias ViewModelType = AddressViewModel
 }

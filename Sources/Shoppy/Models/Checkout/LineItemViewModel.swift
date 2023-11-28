@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class LineItemViewModel: ViewModel {
+public final class LineItemViewModel: ViewModel {
     
-    typealias ModelType = Storefront.CheckoutLineItemEdge
+    public typealias ModelType = Storefront.CheckoutLineItemEdge
     
-    let model:    ModelType
+    public let model:    ModelType
     let cursor:   String
     
     let variantID:           String?
@@ -26,7 +26,7 @@ final class LineItemViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model               = model
         self.cursor              = model.cursor
         
@@ -40,5 +40,5 @@ final class LineItemViewModel: ViewModel {
 }
 
 extension Storefront.CheckoutLineItemEdge: ViewModeling {
-    typealias ViewModelType = LineItemViewModel
+    public typealias ViewModelType = LineItemViewModel
 }

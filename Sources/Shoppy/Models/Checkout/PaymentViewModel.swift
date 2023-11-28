@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class PaymentViewModel: ViewModel {
+public final class PaymentViewModel: ViewModel {
     
-    typealias ModelType = Storefront.Payment
+    public typealias ModelType = Storefront.Payment
     
-    let model:  ModelType
+    public let model:  ModelType
     
     let id:         String
     let isReady:    Bool
@@ -26,7 +26,7 @@ final class PaymentViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model      = model
         
         self.id         = model.id.rawValue
@@ -40,5 +40,5 @@ final class PaymentViewModel: ViewModel {
 }
 
 extension Storefront.Payment: ViewModeling {
-    typealias ViewModelType = PaymentViewModel
+    public typealias ViewModelType = PaymentViewModel
 }

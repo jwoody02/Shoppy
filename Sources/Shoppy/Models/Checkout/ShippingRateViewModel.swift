@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class ShippingRateViewModel: ViewModel {
+public final class ShippingRateViewModel: ViewModel {
     
-    typealias ModelType = Storefront.ShippingRate
+    public typealias ModelType = Storefront.ShippingRate
     
-    let model:  ModelType
+    public let model:  ModelType
     
     let handle: String
     let title:  String
@@ -22,7 +22,7 @@ final class ShippingRateViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model  = model
         
         self.handle = model.handle
@@ -32,5 +32,5 @@ final class ShippingRateViewModel: ViewModel {
 }
 
 extension Storefront.ShippingRate: ViewModeling {
-    typealias ViewModelType = ShippingRateViewModel
+    public typealias ViewModelType = ShippingRateViewModel
 }

@@ -8,22 +8,22 @@
 
 import Buy
 
-final class ManualCodeViewModel: DiscountApplication, ViewModel {
+public final class ManualCodeViewModel: DiscountApplication, ViewModel {
     
-    typealias ModelType = Storefront.ManualDiscountApplication
+    public typealias ModelType = Storefront.ManualDiscountApplication
     
-    let model: ModelType
+    public let model: ModelType
     let name:  String
     
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model = model
         self.name  = model.title
     }
 }
 
 extension Storefront.ManualDiscountApplication: ViewModeling {
-    typealias ViewModelType = ManualCodeViewModel
+    public typealias ViewModelType = ManualCodeViewModel
 }

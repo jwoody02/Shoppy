@@ -9,11 +9,11 @@
 import Foundation
 import Buy
 
-final class OrderViewModel: ViewModel {
+public final class OrderViewModel: ViewModel {
     
-    typealias ModelType = Storefront.OrderEdge
+    public typealias ModelType = Storefront.OrderEdge
     
-    let model:                  ModelType
+    public let model:                  ModelType
     let cursor:                 String
     
     let id:                     String
@@ -26,7 +26,7 @@ final class OrderViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model               = model
         self.cursor              = model.cursor
         
@@ -40,5 +40,5 @@ final class OrderViewModel: ViewModel {
 }
 
 extension Storefront.OrderEdge: ViewModeling {
-    typealias ViewModelType = OrderViewModel
+    public typealias ViewModelType = OrderViewModel
 }

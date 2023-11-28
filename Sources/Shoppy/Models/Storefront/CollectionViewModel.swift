@@ -8,11 +8,11 @@
 import Foundation
 import Buy
 
-final class CollectionViewModel: ViewModel {
+public final class CollectionViewModel: ViewModel {
     
-    typealias ModelType = Storefront.CollectionEdge
+    public typealias ModelType = Storefront.CollectionEdge
     
-    let model:       ModelType
+    public let model:       ModelType
     let cursor:      String
     
     let id:          String
@@ -24,7 +24,7 @@ final class CollectionViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model       = model
         self.cursor      = model.cursor
     
@@ -41,5 +41,5 @@ final class CollectionViewModel: ViewModel {
 }
 
 extension Storefront.CollectionEdge: ViewModeling {
-    typealias ViewModelType = CollectionViewModel
+    public typealias ViewModelType = CollectionViewModel
 }

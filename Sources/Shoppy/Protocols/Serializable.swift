@@ -7,9 +7,9 @@
 
 import Foundation
 
-typealias SerializedRepresentation = [String : Any]
+public typealias SerializedRepresentation = [String : Any]
 
-protocol Serializable {
+public protocol Serializable {
     
     static func deserialize(from representation: SerializedRepresentation) -> Self?
     
