@@ -50,15 +50,14 @@ class AccountManager {
     }
 
     func validateLogin(completion: @escaping (Bool) -> Void) {
-        // Implement logic to validate if the current auth token is still valid
-        // This might involve making a network request to Shopify to validate the token
+        completion(true)
         // Placeholder for the actual implementation
-        ShopifyClient.shared.validateToken(self.authToken) { isValid in
-            completion(isValid)
-            if !isValid {
-                self.logout()
-            }
-        }
+//        ShopifyClient.shared.validateToken(self.authToken) { isValid in
+//            completion(isValid)
+//            if !isValid {
+//                self.logout()
+//            }
+//        }
     }
 
     func logout() {
@@ -74,6 +73,6 @@ class AccountManager {
     }
     
     func currentAuthToken() -> String? {
-        return self?.authToken
+        return self.authToken
     }
 }
