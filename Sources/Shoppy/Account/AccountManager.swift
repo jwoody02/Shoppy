@@ -53,7 +53,7 @@ public final class AccountManager {
 
     private init() {}
 
-    func login(email: String, password: String, completion: @escaping (Bool, Error?) -> Void) {
+    public func login(email: String, password: String, completion: @escaping (Bool, Error?) -> Void) {
         Client.shared?.login(email: email, password: password) { [weak self] (token, expiryDate) in
             guard let self = self, let token = token, let expiryDate = expiryDate else {
                 completion(false, nil)
@@ -66,7 +66,7 @@ public final class AccountManager {
         }
     }
 
-    func validateLogin(completion: @escaping (Bool) -> Void) {
+    public func validateLogin(completion: @escaping (Bool) -> Void) {
         if isLoggedIn {
             completion(true)
         } else {
@@ -75,7 +75,7 @@ public final class AccountManager {
         }
     }
 
-    func logout() {
+    public func logout() {
         self.authToken = nil
         guard let auth = authToken else { return }
         Client.shared?.logout(accessToken: auth) { success in
@@ -87,7 +87,7 @@ public final class AccountManager {
         }
     }
     
-    func currentAuthToken() -> String? {
+    public func currentAuthToken() -> String? {
         return self.authToken
     }
 }
