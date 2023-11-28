@@ -8,7 +8,7 @@
 import Foundation
 import Buy
 
-class ShopDataManager {
+public final class ShopDataManager {
     static let shared = ShopDataManager()
 
     private var collections: [CollectionViewModel] = []
