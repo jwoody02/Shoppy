@@ -53,6 +53,10 @@ public final class Client {
         self.client.cachePolicy = .cacheFirst(expireIn: 3600)
     }
     
+    public func getClient() -> Graph.Client {
+        return self.client
+    }
+    
     // ----------------------------------
     //  MARK: - Customers -
     //
