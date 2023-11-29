@@ -36,6 +36,9 @@ public class ShopDataManager {
                 collections.items.forEach {
                     self.productsByCollectionId[$0.id] = []
                     self.productCursorByCollection[$0.id] = nil
+                    if $0.products.items.isEmpty == false {
+                        self.productCursorByCollection[$0.id] = $0.products.items.last?.cursor
+                    }
                 }
             }
             NotificationCenter.default.post(name: ShopDataManager.collectionsUpdatedNotification, object: nil)
