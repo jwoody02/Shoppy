@@ -99,9 +99,12 @@ public final class CartController {
         let fileManager = FileManager.default
         if !fileManager.fileExists(atPath: self.localCartFile.path) {
             print("Creating cart file..")
-            fileManager.createFile(atPath: self.localCartFile.path, contents: Data(base64Encoded: "[]"), attributes: nil)
+            if let jsonData = try? JSONSerialization.data(withJSONObject: [], options: []) {
+                fileManager.createFile(atPath: self.localCartFile.path, contents: jsonData, attributes: nil)
+            }
         }
     }
+
 
     private func flush() {
         let serializedItems = self.items.serialize()
