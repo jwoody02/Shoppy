@@ -8,7 +8,7 @@
 
 import Foundation
 
-class CartItem: Equatable, Hashable, Serializable {
+public final class CartItem: Equatable, Hashable, Serializable {
     
     private struct Key {
         static let product  = "product"
@@ -33,7 +33,7 @@ class CartItem: Equatable, Hashable, Serializable {
     // ----------------------------------
     //  MARK: - Serializable -
     //
-    static func deserialize(from representation: SerializedRepresentation) -> Self? {
+    public static func deserialize(from representation: SerializedRepresentation) -> Self? {
         guard let product = ProductViewModel.deserialize(from: representation[Key.product] as! SerializedRepresentation) else {
             return nil
         }
@@ -53,7 +53,7 @@ class CartItem: Equatable, Hashable, Serializable {
         )
     }
     
-    func serialize() -> SerializedRepresentation {
+    public func serialize() -> SerializedRepresentation {
         return [
             Key.quantity : self.quantity,
             Key.product  : self.product.serialize(),
@@ -67,7 +67,7 @@ class CartItem: Equatable, Hashable, Serializable {
 //
 extension CartItem {
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(self.variant.id)
     }
 }
@@ -77,7 +77,7 @@ extension CartItem {
 //
 extension CartItem {
     
-    static func ==(lhs: CartItem, rhs: CartItem) -> Bool {
+    public static func ==(lhs: CartItem, rhs: CartItem) -> Bool {
         return lhs.variant.id == rhs.variant.id && lhs.product.id == rhs.product.id
     }
 }

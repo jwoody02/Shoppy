@@ -8,16 +8,16 @@
 
 import Foundation
 
-final class CartItemViewModel: ViewModel {
-    typealias ModelType = CartItem
+public final class CartItemViewModel: ViewModel {
+    public typealias ModelType = CartItem
     
-    let model: ModelType
+    public let model: ModelType
     
-    let imageURL: URL?
-    let title:    String
-    let subtitle: String
-    let price:    String
-    let quantity: Int
+    public let imageURL: URL?
+    public let title:    String
+    public let subtitle: String
+    public let price:    String
+    public let quantity: Int
     
     var quantityDescription: String {
         return "Quantity: \(model.quantity)"
@@ -26,7 +26,7 @@ final class CartItemViewModel: ViewModel {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(from model: ModelType) {
+    required public init(from model: ModelType) {
         self.model = model
         
         self.imageURL = model.product.images.items.first?.url
@@ -38,5 +38,5 @@ final class CartItemViewModel: ViewModel {
 }
 
 extension CartItem: ViewModeling {
-    typealias ViewModelType = CartItemViewModel
+    public typealias ViewModelType = CartItemViewModel
 }
