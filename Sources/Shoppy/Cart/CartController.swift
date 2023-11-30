@@ -95,10 +95,20 @@ public final class CartController {
         }
     }
     
+    private func ensureCartFileExists() {
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: self.localCartFile.path) {
+            print("Creating cart file..")
+            fileManager.createFile(atPath: self.localCartFile.path, contents: nil, attributes: nil)
+        }
+    }
+
     private func flush() {
         let serializedItems = self.items.serialize()
         self.ioQueue.async {
             do {
+                self.ensureCartFileExists()
+                
                 let data = try JSONSerialization.data(withJSONObject: serializedItems, options: [])
                 try data.write(to: self.localCartFile, options: [.atomic])
                 
@@ -113,11 +123,13 @@ public final class CartController {
             }
         }
     }
-    
+
     private func readCart(completion: @escaping ([CartItem]?) -> Void) {
         self.ioQueue.async {
             do {
-                let data            = try Data(contentsOf: self.localCartFile)
+                self.ensureCartFileExists()
+                
+                let data = try Data(contentsOf: self.localCartFile)
                 let serializedItems = try JSONSerialization.jsonObject(with: data, options: [])
                 
                 let cartItems = [CartItem].deserialize(from: serializedItems as! [SerializedRepresentation])
@@ -133,6 +145,7 @@ public final class CartController {
             }
         }
     }
+
     // ----------------------------------
     //  MARK: - Checkout Info Persistence -
     //
