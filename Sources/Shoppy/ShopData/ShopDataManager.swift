@@ -87,4 +87,12 @@ public class ShopDataManager {
         }
         return self.collections[index]
     }
+    
+    public func resetCollectionDataStore() {
+        self.collections = []
+        self.productsByCollectionId = [:]
+        self.productCursorByCollection = [:]
+
+        self.collectionCursor = nil
+    }
 }
