@@ -34,7 +34,7 @@ public final class CartController {
     
     private let ioQueue    = DispatchQueue(label: "com.storefront.writeQueue")
     private var needsFlush = false
-    private var cartURL: URL = {
+    private var localCartFile: URL = {
         let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first!
         let documentsURL  = URL(fileURLWithPath: documentsPath)
         let cartURL       = documentsURL.appendingPathComponent("\(Client.shared?.config.shopDomain ?? "").json")
@@ -100,7 +100,7 @@ public final class CartController {
         self.ioQueue.async {
             do {
                 let data = try JSONSerialization.data(withJSONObject: serializedItems, options: [])
-                try data.write(to: self.cartURL, options: [.atomic])
+                try data.write(to: self.localCartFile, options: [.atomic])
                 
                 print("Flushed cart to disk.")
                 
@@ -117,7 +117,7 @@ public final class CartController {
     private func readCart(completion: @escaping ([CartItem]?) -> Void) {
         self.ioQueue.async {
             do {
-                let data            = try Data(contentsOf: self.cartURL)
+                let data            = try Data(contentsOf: self.localCartFile)
                 let serializedItems = try JSONSerialization.jsonObject(with: data, options: [])
                 
                 let cartItems = [CartItem].deserialize(from: serializedItems as! [SerializedRepresentation])
@@ -148,7 +148,7 @@ public final class CartController {
                 }
                 
                 let data = try JSONSerialization.data(withJSONObject: checkoutInfo, options: [])
-                let checkoutInfoURL = self.cartURL.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
+                let checkoutInfoURL = self.localCartFile.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
                 try data.write(to: checkoutInfoURL, options: [.atomic])
 
                 print("Checkout information saved.")
@@ -160,7 +160,7 @@ public final class CartController {
     
     private func readCheckoutInfo() {
         self.ioQueue.async {
-            let checkoutInfoURL = self.cartURL.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
+            let checkoutInfoURL = self.localCartFile.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
             do {
                 let data = try Data(contentsOf: checkoutInfoURL)
                 if let checkoutInfo = try JSONSerialization.jsonObject(with: data, options: []) as? [String: String] {
@@ -189,8 +189,8 @@ public final class CartController {
                 if let id = id, let _ = url {
                     self?.checkoutUrl = url
                     self?.checkoutId = id
-                    self?.saveCheckoutInfo()
                     print("Updated cart with id '\(id)', saving to disk.")
+                    self?.saveCheckoutInfo()
                 } else {
                     print("Shoppy Error: Could not update cart")
                 }
@@ -209,8 +209,8 @@ public final class CartController {
                 if let id = id, let url = url {
                     self?.checkoutUrl = url
                     self?.checkoutId = id
-                    self?.saveCheckoutInfo()
                     print("Created cart with id '\(id)', saving to disk.")
+                    self?.saveCheckoutInfo()
                 } else {
                     print("Shoppy Error: Could not create cart")
                 }
@@ -271,6 +271,51 @@ public final class CartController {
     
     private func notifyCartStateChange() {
         NotificationCenter.default.post(name: .CartControllerStateDidChange, object: self)
+    }
+    
+    
+    public func validateCart(completion: @escaping (Bool) -> Void) {
+        guard !self.items.isEmpty else {
+            completion(true)
+            return
+        }
+
+        var isCartValid = true
+        let group = DispatchGroup()
+
+        for item in self.items {
+            group.enter()
+            validateCartItem(item) { isValid in
+                if !isValid {
+                    isCartValid = false
+                    self.removeItem(item)
+                }
+                group.leave()
+            }
+        }
+
+        group.notify(queue: .main) {
+            completion(isCartValid)
+        }
+    }
+
+    private func validateCartItem(_ cartItem: CartItem, completion: @escaping (Bool) -> Void) {
+        Client.shared?.fetchProductVariant(id: GraphQL.ID(rawValue: cartItem.variant.id) ) { result in
+            switch result {
+            case .success(let variant):
+                let isValid = variant.availableForSale && variant.currentlyNotInStock == false
+                completion(isValid)
+            case .failure(_):
+                completion(false)
+            }
+        }
+    }
+
+    private func removeItem(_ cartItem: CartItem) {
+        if let index = self.items.firstIndex(of: cartItem) {
+            self.items.remove(at: index)
+            self.itemsChanged()
+        }
     }
 }
 

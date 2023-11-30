@@ -125,6 +125,23 @@ public final class ClientQuery {
         }
     }
     
+    static func queryForProductVariant(withId id: GraphQL.ID) -> Storefront.QueryRootQuery {
+        return Storefront.buildQuery { $0
+            .node(id: id) { $0
+                .onProductVariant { $0
+                    .id()
+                    .title()
+                    .price { $0
+                        .amount()
+                        .currencyCode()
+                    }
+                    .availableForSale()
+                    .currentlyNotInStock()
+                }
+            }
+        }
+    }
+    
     // ----------------------------------
     //  MARK: - Discounts -
     //
@@ -164,7 +181,7 @@ public final class ClientQuery {
     //  MARK: - Cart -
     //
     static func mutationForCreateCart(with cartItems: [CartItem], buyer identity: Storefront.CartBuyerIdentityInput?) -> Storefront.MutationQuery {
-        var linesInput: [Storefront.CartLineInput] = cartItems.map {
+        let linesInput: [Storefront.CartLineInput] = cartItems.map {
             .create(
                 merchandiseId: GraphQL.ID(rawValue: $0.variant.id),
                 quantity: Input(orNull: Int32($0.quantity))

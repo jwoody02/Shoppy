@@ -219,6 +219,28 @@ public final class Client {
         task.resume()
         return task
     }
+    @discardableResult
+    func fetchProductVariant(id: GraphQL.ID, completion: @escaping (Result<Storefront.ProductVariant, Error>) -> Void) -> Task {
+
+        let query = ClientQuery.queryForProductVariant(withId: id)
+        let task = self.client.queryGraphWith(query) { (query, error) in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let query = query,
+                  let node = query.node as? Storefront.ProductVariant else {
+                completion(.failure(CustomError("Failed to fetch product variant.")))
+                return
+            }
+
+            completion(.success(node))
+        }
+
+        task.resume()
+        return task
+    }
     
     // ----------------------------------
     //  MARK: - Discounts -
@@ -507,5 +529,13 @@ extension Optional where Wrapped == Graph.QueryError {
         case .none:
             break
         }
+    }
+}
+
+struct CustomError: Error {
+    var message: String
+
+    init(_ message: String) {
+        self.message = message
     }
 }
