@@ -16,17 +16,17 @@ extension Notification.Name {
 
 public final class CartController {
     
-    static let shared = CartController()
+    public static let shared = CartController()
     
     private(set) var items: [CartItem] = []
     
-    var subtotal: Decimal {
+    public var subtotal: Decimal {
         return self.items.reduce(0) {
             $0 + $1.variant.price * Decimal($1.quantity)
         }
     }
     
-    var itemCount: Int {
+    public var itemCount: Int {
         return self.items.reduce(0) {
             $0 + $1.quantity
         }
@@ -222,7 +222,7 @@ public final class CartController {
     // ----------------------------------
     //  MARK: - Item Management -
     //
-    func updateQuantity(_ quantity: Int, at index: Int) -> Bool {
+    public func updateQuantity(_ quantity: Int, at index: Int) -> Bool {
         let existingItem = self.items[index]
         
         if existingItem.quantity != quantity {
@@ -234,21 +234,21 @@ public final class CartController {
         return false
     }
     
-    func incrementAt(_ index: Int) {
+    public func incrementAt(_ index: Int) {
         let existingItem = self.items[index]
         existingItem.quantity += 1
         
         self.itemsChanged()
     }
     
-    func decrementAt(_ index: Int) {
+    public func decrementAt(_ index: Int) {
         let existingItem = self.items[index]
         existingItem.quantity -= 1
         
         self.itemsChanged()
     }
     
-    func add(_ cartItem: CartItem) {
+    public func add(_ cartItem: CartItem) {
         if let index = self.items.firstIndex(of: cartItem) {
             self.items[index].quantity += 1
         } else {
@@ -258,13 +258,13 @@ public final class CartController {
         self.itemsChanged()
     }
     
-    func removeAllQuantitiesFor(_ cartItem: CartItem) {
+    public func removeAllQuantitiesFor(_ cartItem: CartItem) {
         if let index = self.items.firstIndex(of: cartItem) {
             self.removeAllQuantities(at: index)
         }
     }
     
-    func removeAllQuantities(at index: Int) {
+    public func removeAllQuantities(at index: Int) {
         self.items.remove(at: index)
         self.itemsChanged()
     }
