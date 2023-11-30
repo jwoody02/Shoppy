@@ -88,11 +88,11 @@ public class ShopDataManager {
         return self.collections[index]
     }
     
-    public func resetCollectionDataStore() {
-        self.collections = []
-        self.productsByCollectionId = [:]
-        self.productCursorByCollection = [:]
+    public static func resetCollectionDataStore() {
+        ShopDataManager.shared.collections = []
+        ShopDataManager.shared.productsByCollectionId = [:]
+        ShopDataManager.shared.productCursorByCollection = [:]
 
-        self.collectionCursor = nil
+        ShopDataManager.shared.collectionCursor = nil
     }
 }
