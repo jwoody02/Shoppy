@@ -335,6 +335,6 @@ public final class CartController {
     }
 }
 
-extension Notification.Name {
+public extension Notification.Name {
     static let CartControllerStateDidChange = Notification.Name("CartControllerStateDidChange")
 }

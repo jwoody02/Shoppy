@@ -88,7 +88,7 @@ public class ShopDataManager {
         return self.collections[index]
     }
     
-    public static func resetCollectionDataStore() {
+    public static func resetSharedCollectionDataStore() {
         ShopDataManager.shared.collections = []
         ShopDataManager.shared.productsByCollectionId = [:]
         ShopDataManager.shared.productCursorByCollection = [:]
