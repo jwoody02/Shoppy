@@ -18,9 +18,6 @@ public class ShopDataManager {
     private var collectionCursor: String?
     private let client: Client? = Client.shared
 
-    // Define notification names
-    static let collectionsUpdatedNotification = Notification.Name("ShopDataManagerCollectionsUpdated")
-    static let productsUpdatedNotification = Notification.Name("ShopDataManagerProductsUpdated")
 
     
     // Fetch collections with pagination
@@ -37,11 +34,12 @@ public class ShopDataManager {
                     self.productsByCollectionId[$0.id] = []
                     self.productCursorByCollection[$0.id] = nil
                     if $0.products.items.isEmpty == false {
+                        self.productsByCollectionId[$0.id] = $0.products.items
                         self.productCursorByCollection[$0.id] = $0.products.items.last?.cursor
                     }
                 }
             }
-            NotificationCenter.default.post(name: ShopDataManager.collectionsUpdatedNotification, object: nil)
+            NotificationCenter.default.post(name: .collectionsUpdatedNotification, object: nil)
             
             if let _ = result {
                 completion(true)
@@ -64,7 +62,7 @@ public class ShopDataManager {
                 // Update product cursor for this collection
                 self.productCursorByCollection[collection.id] = products.pageInfo.hasNextPage ? products.items.last?.cursor : nil
             }
-            NotificationCenter.default.post(name: ShopDataManager.productsUpdatedNotification, object: nil, userInfo: ["collectionId": collection.id])
+            NotificationCenter.default.post(name: .productsUpdatedNotification, object: nil, userInfo: ["collectionId": collection.id])
                 
             completion(result?.items)
         }
@@ -95,4 +93,9 @@ public class ShopDataManager {
 
         ShopDataManager.shared.collectionCursor = nil
     }
+}
+
+public extension Notification.Name {
+    static let collectionsUpdatedNotification = Notification.Name("ShopDataManagerCollectionsUpdated")
+    static let productsUpdatedNotification = Notification.Name("ShopDataManagerProductsUpdated")
 }
