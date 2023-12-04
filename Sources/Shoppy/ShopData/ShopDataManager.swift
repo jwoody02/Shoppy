@@ -73,7 +73,15 @@ public class ShopDataManager {
             completion(result?.items)
         }
     }
-
+    
+    // check if reached end of collection
+    public func hasReachedEndOfCollection(id collection: String) -> Bool {
+        if let hasReached = self.hasReachedEndOfCollection[collection] {
+            return hasReached ?? false
+        }
+        return false
+    }
+    
     // Function to get products for a specific collection
     public func products(in collection: CollectionViewModel) -> [ProductViewModel]? {
         return productsByCollectionId[collection.id]
