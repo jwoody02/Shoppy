@@ -17,6 +17,7 @@ public class ShopDataManager {
     private var hasReachedEndOfCollection: [String: Bool?] = [:]
     
     private var collectionCursor: String?
+    private var reachedEndOfCollections = false
     private let client: Client? = Client.shared
 
 
@@ -27,9 +28,14 @@ public class ShopDataManager {
         return client?.fetchCollections(limit: limit, after: collectionCursor, productLimit: 25, productCursor: nil) { [weak self] result in
             guard let self = self else { return }
 
-            if let collections = result {
+            if let collections = result, !reachedEndOfCollections {
                 self.collections.append(contentsOf: collections.items)
-                self.collectionCursor = collections.pageInfo.hasNextPage ? collections.items.last?.cursor : nil
+                if let cursor = collections.items.last?.cursor {
+                    self.collectionCursor = cursor
+                } else {
+                    self.reachedEndOfCollections = true
+                }
+                
                 // Initialize product arrays and cursors for each collection
                 collections.items.forEach {
                     self.productsByCollectionId[$0.id] = []
@@ -38,6 +44,7 @@ public class ShopDataManager {
                         self.productsByCollectionId[$0.id] = $0.products.items
                         self.productCursorByCollection[$0.id] = $0.products.items.last?.cursor
                     }
+                    
                 }
             }
             NotificationCenter.default.post(name: .collectionsUpdatedNotification, object: nil)
@@ -80,6 +87,11 @@ public class ShopDataManager {
             return hasReached ?? false
         }
         return false
+    }
+    
+    // check if already fetched all collections
+    public func hasReachedEndOfCollections() -> Bool {
+        return self.reachedEndOfCollections
     }
     
     // Function to get products for a specific collection
