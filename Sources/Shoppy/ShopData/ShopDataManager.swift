@@ -14,7 +14,8 @@ public class ShopDataManager {
     private var collections: [CollectionViewModel] = []
     private var productsByCollectionId: [String: [ProductViewModel]] = [:]
     private var productCursorByCollection: [String: String?] = [:]
-
+    private var hasReachedEndOfCollection: [String: Bool?] = [:]
+    
     private var collectionCursor: String?
     private let client: Client? = Client.shared
 
@@ -56,11 +57,16 @@ public class ShopDataManager {
         return client?.fetchProducts(in: collection, limit: limit, after: currentCursor) { [weak self] result in
             guard let self = self else { return }
 
-            if let products = result {
+            if let products = result, (self.hasReachedEndOfCollection[collection.id] == nil)  {
                 // Append products to the correct collection
                 self.productsByCollectionId[collection.id]?.append(contentsOf: products.items)
-                // Update product cursor for this collection
-                self.productCursorByCollection[collection.id] = products.pageInfo.hasNextPage ? products.items.last?.cursor : nil
+                self.productCursorByCollection[collection.id] = products.items.last?.cursor
+                
+                // reached end of collection
+                if !products.pageInfo.hasNextPage {
+                    self.hasReachedEndOfCollection[collection.id] = true
+                }
+                
             }
             NotificationCenter.default.post(name: .productsUpdatedNotification, object: nil, userInfo: ["collectionId": collection.id])
                 
@@ -90,7 +96,7 @@ public class ShopDataManager {
         ShopDataManager.shared.collections = []
         ShopDataManager.shared.productsByCollectionId = [:]
         ShopDataManager.shared.productCursorByCollection = [:]
-
+        ShopDataManager.shared.hasReachedEndOfCollection = [:]
         ShopDataManager.shared.collectionCursor = nil
     }
 }
