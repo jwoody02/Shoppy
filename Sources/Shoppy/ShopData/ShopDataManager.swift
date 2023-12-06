@@ -24,7 +24,7 @@ public class ShopDataManager {
     
     // Fetch collections with pagination
     @discardableResult
-    public func fetchCollections(limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String?, completion: @escaping ([CollectionViewModel]?) -> Void) -> Task? {
+    public func fetchCollections(limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String? = nil, completion: @escaping ([CollectionViewModel]?) -> Void) -> Task? {
         var currentCursor = collectionCursor
         if let cursor = customCursor {
             if cursor == "" {
@@ -67,7 +67,7 @@ public class ShopDataManager {
 
     // Fetch products within a collection with pagination
     @discardableResult
-    public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String?, completion: @escaping ([ProductViewModel]?) -> Void) -> Task? {
+    public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String? = nil, completion: @escaping ([ProductViewModel]?) -> Void) -> Task? {
         var currentCursor = productCursorByCollection[collection.id] ?? nil
         if let cursor = customCursor {
             if cursor == "" {
