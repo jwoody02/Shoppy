@@ -24,11 +24,19 @@ public class ShopDataManager {
     
     // Fetch collections with pagination
     @discardableResult
-    public func fetchCollections(limit: Int = 25, completion: @escaping (Bool) -> Void) -> Task? {
-        return client?.fetchCollections(limit: limit, after: collectionCursor, productLimit: 25, productCursor: nil) { [weak self] result in
+    public func fetchCollections(limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String?, completion: @escaping ([CollectionViewModel]?) -> Void) -> Task? {
+        var currentCursor = collectionCursor
+        if let cursor = customCursor {
+            if cursor == "" {
+                currentCursor = nil
+            } else {
+                currentCursor = customCursor
+            }
+        }
+        return client?.fetchCollections(limit: limit, after: currentCursor, productLimit: 25, productCursor: nil) { [weak self] result in
             guard let self = self else { return }
-
-            if let collections = result, !reachedEndOfCollections {
+            
+            if let collections = result, !reachedEndOfCollections, shouldSaveToDataStore {
                 self.collections.append(contentsOf: collections.items)
                 if let cursor = collections.items.last?.cursor {
                     self.collectionCursor = cursor
@@ -49,22 +57,29 @@ public class ShopDataManager {
             }
             NotificationCenter.default.post(name: .collectionsUpdatedNotification, object: nil)
             
-            if let _ = result {
-                completion(true)
+            if let result = result {
+                completion(result.getItems())
             } else {
-                completion(false)
+                completion(nil)
             }
         }
     }
 
     // Fetch products within a collection with pagination
     @discardableResult
-    public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, completion: @escaping ([ProductViewModel]?) -> Void) -> Task? {
-        let currentCursor = productCursorByCollection[collection.id] ?? nil
+    public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String?, completion: @escaping ([ProductViewModel]?) -> Void) -> Task? {
+        var currentCursor = productCursorByCollection[collection.id] ?? nil
+        if let cursor = customCursor {
+            if cursor == "" {
+                currentCursor = nil
+            } else {
+                currentCursor = customCursor
+            }
+        }
         return client?.fetchProducts(in: collection, limit: limit, after: currentCursor) { [weak self] result in
             guard let self = self else { return }
 
-            if let products = result, (self.hasReachedEndOfCollection[collection.id] == nil)  {
+            if let products = result, (self.hasReachedEndOfCollection[collection.id] == nil), shouldSaveToDataStore  {
                 // Append products to the correct collection
                 self.productsByCollectionId[collection.id]?.append(contentsOf: products.items)
                 self.productCursorByCollection[collection.id] = products.items.last?.cursor
