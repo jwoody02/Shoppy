@@ -19,6 +19,7 @@ public final class CartController {
     public static let shared = CartController()
     
     private(set) var items: [CartItem] = []
+    private(set) var previousItems: [CartItem] = []
     
     public var subtotal: Decimal {
         return self.items.reduce(0) {
@@ -67,12 +68,14 @@ public final class CartController {
     //  MARK: - Init -
     //
     private init() {
-        self.readCart { items in
+        self.readCart { items, previousItems in
             if let items = items {
                 self.items = items
-                
-                self.postItemsChangedNotification()
             }
+            if let previousItems = previousItems {
+                self.previousItems = previousItems
+            }
+            self.postItemsChangedNotification()
         }
     }
     
@@ -108,11 +111,13 @@ public final class CartController {
 
     private func flush() {
         let serializedItems = self.items.serialize()
+        let serializedPreviousItems = self.previousItems.serialize() // Serialize previousItems
         self.ioQueue.async {
             do {
                 self.ensureCartFileExists()
                 
-                let data = try JSONSerialization.data(withJSONObject: serializedItems, options: [])
+                let cartData = ["items": serializedItems, "previousItems": serializedPreviousItems] // Combine items and previousItems
+                let data = try JSONSerialization.data(withJSONObject: cartData, options: [])
                 try data.write(to: self.localCartFile, options: [.atomic])
                 
                 print("Flushed cart to disk.")
@@ -127,23 +132,24 @@ public final class CartController {
         }
     }
 
-    private func readCart(completion: @escaping ([CartItem]?) -> Void) {
+    private func readCart(completion: @escaping ([CartItem]?, [CartItem]?) -> Void) {
         self.ioQueue.async {
             do {
                 self.ensureCartFileExists()
                 
                 let data = try Data(contentsOf: self.localCartFile)
-                let serializedItems = try JSONSerialization.jsonObject(with: data, options: [])
+                let cartData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
                 
-                let cartItems = [CartItem].deserialize(from: serializedItems as! [SerializedRepresentation])
+                let cartItems = [CartItem].deserialize(from: cartData?["items"] as? [SerializedRepresentation] ?? [])
+                let previousCartItems = [CartItem].deserialize(from: cartData?["previousItems"] as? [SerializedRepresentation] ?? []) // Deserialize previousItems
                 DispatchQueue.main.async {
-                    completion(cartItems)
+                    completion(cartItems, previousCartItems)
                 }
                 
             } catch let error {
                 print("Failed to load cart from disk: \(error)")
                 DispatchQueue.main.async {
-                    completion(nil)
+                    completion(nil, nil)
                 }
             }
         }
@@ -196,12 +202,36 @@ public final class CartController {
     //
     private func itemsChanged() {
         self.state = .updating
+
+        var modificationsArray: [CartItem] = []
+        
+        // Iterate through current items to detect changes and removals
+        for item in self.items {
+            if let previousItem = self.previousItems.first(where: { $0.variant.id == item.variant.id }) {
+                if previousItem.quantity != item.quantity {
+                    modificationsArray.append(item) // changed quantity
+                }
+            } else {
+                modificationsArray.append(item) // new item
+            }
+        }
+
+        // Detect removed items
+        for previousItem in self.previousItems {
+            if !self.items.contains(where: { $0.variant.id == previousItem.variant.id }) {
+                let removedItem = previousItem
+                removedItem.quantity = 0
+                modificationsArray.append(removedItem)
+            }
+        }
+
+        self.previousItems = self.items
         self.setNeedsFlush()
         self.postItemsChangedNotification()
-
+        
         if let checkoutId = self.checkoutId {
             // Update existing checkout
-            Client.shared?.updateCartLineItems(id: checkoutId, with: self.items) { [weak self] id, url in
+            Client.shared?.updateCartLineItems(id: checkoutId, with: modificationsArray) { [weak self] id, url in
                 if let id = id, let _ = url {
                     self?.checkoutUrl = url
                     self?.checkoutId = id
