@@ -7,6 +7,7 @@
 
 import Foundation
 import Buy
+import os.log
 
 protocol AccountManagerDelegate: AnyObject {
     func accountManagerDidUpdateLoginStatus(_ manager: AccountManager, isLoggedIn: Bool)
@@ -76,13 +77,22 @@ public final class AccountManager {
     }
 
     public func logout() {
+        let startTime = Date()
         self.authToken = nil
         guard let auth = authToken else { return }
         Client.shared?.logout(accessToken: auth) { success in
             if success {
-                print("Successfully logged out")
+                if #available(iOS 14.0, *) {
+                    os_log(.info, "Successfully logged out (\(Date().timeIntervalSince(startTime)) seconds)")
+                } else {
+                    print("Sucessfully logged out")
+                }
             } else {
-                print("Error logging out")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Error when logging out (\(Date().timeIntervalSince(startTime)) seconds)")
+                } else {
+                    print("Error logging out")
+                }
             }
         }
     }

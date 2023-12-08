@@ -8,6 +8,7 @@
 import Foundation
 import Buy
 import Pay
+import os.log
 
 public struct ClientConfig {
     public var shopDomain: String
@@ -71,7 +72,12 @@ public final class Client {
                 completion(container.accessToken, container.expiresAt)
             } else {
                 let errors = mutation?.customerAccessTokenCreate?.customerUserErrors ?? []
-                print("Failed to login customer: \(errors)")
+                
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to login: \(errors)")
+                } else {
+                    print("Failed to login customer: \(errors)")
+                }
                 completion(nil, nil)
             }
         }
@@ -91,7 +97,11 @@ public final class Client {
                 completion(deletedToken == accessToken)
             } else {
                 let errors = mutation?.customerAccessTokenDelete?.userErrors ?? []
-                print("Failed to logout customer: \(errors)")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to logout: \(errors)")
+                } else {
+                    print("Failed to logout customer: \(errors)")
+                }
                 completion(false)
             }
         }
@@ -115,7 +125,11 @@ public final class Client {
                 )
                 completion((viewModel, collections))
             } else {
-                print("Failed to load customer and orders: \(String(describing: error))")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to load customer and orders: \(String(describing: error))")
+                } else {
+                    print("Failed to load customer and orders: \(String(describing: error))")
+                }
                 completion(nil)
             }
         }
@@ -137,7 +151,11 @@ public final class Client {
             if let query = query {
                 completion(query.shop.name)
             } else {
-                print("Failed to fetch shop name: \(String(describing: error))")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to fetch shop name: \(String(describing: error))")
+                } else {
+                    print("Failed to fetch shop name: \(String(describing: error))")
+                }
                 completion(nil)
             }
         }
@@ -156,7 +174,11 @@ public final class Client {
             if let query = query {
                 completion(query.shop.primaryDomain.url)
             } else {
-                print("Failed to fetch shop url: \(String(describing: error))")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to fetch shop url: \(String(describing: error))")
+                } else {
+                    print("Failed to fetch shop url: \(String(describing: error))")
+                }
                 completion(nil)
             }
         }
@@ -182,7 +204,11 @@ public final class Client {
                 )
                 completion(collections)
             } else {
-                print("Failed to load collections: \(String(describing: error))")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to load collections: \(String(describing: error))")
+                } else {
+                    print("Failed to load collections: \(String(describing: error))")
+                }
                 completion(nil)
             }
         }
@@ -211,7 +237,11 @@ public final class Client {
                 completion(products)
                 
             } else {
-                print("Failed to load products in collection (\(collection.model.node.id.rawValue)): \(String(describing: error))")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to load products in collection (\(collection.model.node.id.rawValue)): \(String(describing: error))")
+                } else {
+                    print("Failed to load products in collection (\(collection.model.node.id.rawValue)): \(String(describing: error))")
+                }
                 completion(nil)
             }
         }
@@ -231,6 +261,11 @@ public final class Client {
 
             guard let query = query,
                   let node = query.node as? Storefront.ProductVariant else {
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to fetch product variant \(id)")
+                } else {
+                    print("Failed to fetch product variant.")
+                }
                 completion(.failure(CustomError("Failed to fetch product variant.")))
                 return
             }

@@ -8,7 +8,7 @@
 
 import Foundation
 import Buy
-
+import os.log
 
 extension Notification.Name {
     static let CartControllerItemsDidChange = Notification.Name("CartController.ItemsDidChange")
@@ -40,7 +40,11 @@ public final class CartController {
         let documentsURL  = URL(fileURLWithPath: documentsPath)
         let cartURL       = documentsURL.appendingPathComponent("\(Client.shared?.config.shopDomain ?? "").json")
         
-        print("Cart URL: \(cartURL)")
+        if #available(iOS 14.0, *) {
+            os_log(.debug, "Cart URL: \(cartURL)")
+        } else {
+            print("Cart URL: \(cartURL)")
+        }
         
         return cartURL
     }()
@@ -101,7 +105,11 @@ public final class CartController {
     private func ensureCartFileExists() {
         let fileManager = FileManager.default
         if !fileManager.fileExists(atPath: self.localCartFile.path) {
-            print("Creating cart file..")
+            if #available(iOS 14.0, *) {
+                os_log(.info, "Creating cart file at \(self.localCartFile.path)..")
+            } else {
+                print("Creating cart file..")
+            }
             if let jsonData = try? JSONSerialization.data(withJSONObject: [], options: []) {
                 fileManager.createFile(atPath: self.localCartFile.path, contents: jsonData, attributes: nil)
             }
@@ -120,10 +128,18 @@ public final class CartController {
                 let data = try JSONSerialization.data(withJSONObject: cartData, options: [])
                 try data.write(to: self.localCartFile, options: [.atomic])
                 
-                print("Flushed cart to disk.")
+                if #available(iOS 14.0, *) {
+                    os_log(.info, "Flushed cart to disk.")
+                } else {
+                    print("Flushed cart to disk.")
+                }
                 
             } catch let error {
-                print("Failed to flush cart to disk: \(error)")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to flush cart to disk: \(error)")
+                } else {
+                    print("Failed to flush cart to disk: \(error)")
+                }
             }
             
             DispatchQueue.main.async {
@@ -147,7 +163,11 @@ public final class CartController {
                 }
                 
             } catch let error {
-                print("Failed to load cart from disk: \(error)")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to load cart from disk: \(error)")
+                } else {
+                    print("Failed to load cart from disk: \(error)")
+                }
                 DispatchQueue.main.async {
                     completion(nil, nil)
                 }
@@ -173,9 +193,17 @@ public final class CartController {
                 let checkoutInfoURL = self.localCartFile.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
                 try data.write(to: checkoutInfoURL, options: [.atomic])
 
-                print("Checkout information saved.")
+                if #available(iOS 14.0, *) {
+                    os_log(.info, "Checkout information saved.")
+                } else {
+                    print("Checkout information saved.")
+                }
             } catch let error {
-                print("Failed to save checkout information: \(error)")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to save checkout information: \(error)")
+                } else {
+                    print("Failed to save checkout information: \(error)")
+                }
             }
         }
     }
@@ -192,7 +220,11 @@ public final class CartController {
                     }
                 }
             } catch let error {
-                print("Failed to load checkout information: \(error)")
+                if #available(iOS 14.0, *) {
+                    os_log(.error, "Failed to load checkout information: \(error)")
+                } else {
+                    print("Failed to load checkout information: \(error)")
+                }
             }
         }
     }
@@ -232,13 +264,21 @@ public final class CartController {
         if let checkoutId = self.checkoutId {
             // Update existing checkout
             Client.shared?.updateCartLineItems(id: checkoutId, with: modificationsArray) { [weak self] id, url in
-                if let id = id, let _ = url {
+                if let id = id, let url = url {
                     self?.checkoutUrl = url
                     self?.checkoutId = id
-                    print("Updated cart with id '\(id)', saving to disk.")
+                    if #available(iOS 14.0, *) {
+                        os_log(.info, "Updated cart with id '\(id)', saving to disk.")
+                    } else {
+                        print("Updated cart with id '\(id)', saving to disk.")
+                    }
                     self?.saveCheckoutInfo()
                 } else {
-                    print("Shoppy Error: Could not update cart")
+                    if #available(iOS 14.0, *) {
+                        os_log(.error, "Shoppy Error: Could not update cart")
+                    } else {
+                        print("Shoppy Error: Could not update cart")
+                    }
                 }
                 self?.state = .idle
             }
@@ -247,7 +287,11 @@ public final class CartController {
             var buyerIdentity: Storefront.CartBuyerIdentityInput? = nil
             if let authToken = AccountManager.shared.currentAuthToken() {
                 buyerIdentity = .create(customerAccessToken: .value(authToken))
-                print("Associating cart with customer \(authToken)")
+                if #available(iOS 14.0, *) {
+                    os_log(.debug, "Associating cart with customer \(authToken)")
+                } else {
+                    print("Associating cart with customer \(authToken)")
+                }
             }
             
             // Create new checkout
@@ -255,10 +299,18 @@ public final class CartController {
                 if let id = id, let url = url {
                     self?.checkoutUrl = url
                     self?.checkoutId = id
-                    print("Created cart with id '\(id)', saving to disk.")
+                    if #available(iOS 14.0, *) {
+                        os_log(.info, "Created cart with id '\(id)', saving to disk.")
+                    } else {
+                        print("Created cart with id '\(id)', saving to disk.")
+                    }
                     self?.saveCheckoutInfo()
                 } else {
-                    print("Shoppy Error: Could not create cart")
+                    if #available(iOS 14.0, *) {
+                        os_log(.error, "Shoppy Error: Could not create cart")
+                    } else {
+                        print("Shoppy Error: Could not create cart")
+                    }
                 }
                 self?.state = .idle
             }

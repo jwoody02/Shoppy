@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os.log
 class CheckoutCachingService {
     private static let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
     
@@ -15,22 +16,38 @@ class CheckoutCachingService {
         
         // Check if the checkout link is already cached
         if FileManager.default.fileExists(atPath: cacheDirectory.path) {
-            print("Checkout link already cached")
+            if #available(iOS 14.0, *) {
+                os_log(.debug, "Checkout link already cached")
+            } else {
+                print("Checkout link already cached")
+            }
             return
         }
         
         // Download the checkout link
         guard let data = try? Data(contentsOf: url) else {
-            print("Failed to download checkout link")
+            if #available(iOS 14.0, *) {
+                os_log(.error, "Failed to download checkout link from \(url.absoluteString)")
+            } else {
+                print("Failed to download checkout link")
+            }
             return
         }
         
         // Cache the checkout link
         do {
             try data.write(to: cacheDirectory)
-            print("Checkout link cached successfully")
+            if #available(iOS 14.0, *) {
+                os_log(.debug, "Checkout link cached successfully")
+            } else {
+                print("Checkout link cached successfully")
+            }
         } catch {
-            print("Failed to cache checkout link: \(error)")
+            if #available(iOS 14.0, *) {
+                os_log(.error, "Failed to cache checkout link: \(error)")
+            } else {
+                print("Failed to cache checkout link: \(error)")
+            }
         }
     }
     
@@ -40,17 +57,30 @@ class CheckoutCachingService {
         
         // Check if the checkout link is cached
         guard FileManager.default.fileExists(atPath: cacheDirectory.path) else {
-            print("Checkout link not found in cache")
+            if #available(iOS 14.0, *) {
+                os_log(.error, "Checkout link not found in cache")
+            } else {
+                print("Checkout link not found in cache")
+            }
             return nil
         }
         
         // Retrieve the checkout link from cache
         guard let data = try? Data(contentsOf: cacheDirectory) else {
-            print("Failed to retrieve checkout link from cache")
+            print()
+            if #available(iOS 14.0, *) {
+                os_log(.error, "Failed to retrieve checkout link from cache")
+            } else {
+                print("Failed to retrieve checkout link from cache")
+            }
             return nil
         }
         
-        print("Checkout link retrieved from cache")
+        if #available(iOS 14.0, *) {
+            os_log(.info, "Checkout link retrieved from cache")
+        } else {
+            print("Checkout link retrieved from cache")
+        }
         return data
     }
 }
