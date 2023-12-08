@@ -89,7 +89,7 @@ public final class AccountManager {
                 }
             } else {
                 if #available(iOS 14.0, *) {
-                    os_log(.error, "Error when logging out (\(Date().timeIntervalSince(startTime)) seconds)")
+                    os_log(.fault, "Error when logging out (\(Date().timeIntervalSince(startTime)) seconds)")
                 } else {
                     print("Error logging out")
                 }

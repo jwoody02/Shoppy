@@ -27,7 +27,7 @@ class CheckoutCachingService {
         // Download the checkout link
         guard let data = try? Data(contentsOf: url) else {
             if #available(iOS 14.0, *) {
-                os_log(.error, "Failed to download checkout link from \(url.absoluteString)")
+                os_log(.fault, "Failed to download checkout link from \(url.absoluteString)")
             } else {
                 print("Failed to download checkout link")
             }
@@ -44,7 +44,7 @@ class CheckoutCachingService {
             }
         } catch {
             if #available(iOS 14.0, *) {
-                os_log(.error, "Failed to cache checkout link: \(error)")
+                os_log(.fault, "Failed to cache checkout link: \(error)")
             } else {
                 print("Failed to cache checkout link: \(error)")
             }
@@ -69,7 +69,7 @@ class CheckoutCachingService {
         guard let data = try? Data(contentsOf: cacheDirectory) else {
             print()
             if #available(iOS 14.0, *) {
-                os_log(.error, "Failed to retrieve checkout link from cache")
+                os_log(.fault, "Failed to retrieve checkout link from cache")
             } else {
                 print("Failed to retrieve checkout link from cache")
             }

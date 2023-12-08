@@ -136,7 +136,7 @@ public final class CartController {
                 
             } catch let error {
                 if #available(iOS 14.0, *) {
-                    os_log(.error, "Failed to flush cart to disk: \(error)")
+                    os_log(.fault, "Failed to flush cart to disk: \(error)")
                 } else {
                     print("Failed to flush cart to disk: \(error)")
                 }
@@ -164,7 +164,7 @@ public final class CartController {
                 
             } catch let error {
                 if #available(iOS 14.0, *) {
-                    os_log(.error, "Failed to load cart from disk: \(error)")
+                    os_log(.fault, "Failed to load cart from disk: \(error)")
                 } else {
                     print("Failed to load cart from disk: \(error)")
                 }
@@ -200,7 +200,7 @@ public final class CartController {
                 }
             } catch let error {
                 if #available(iOS 14.0, *) {
-                    os_log(.error, "Failed to save checkout information: \(error)")
+                    os_log(.fault, "Failed to save checkout information: \(error)")
                 } else {
                     print("Failed to save checkout information: \(error)")
                 }
@@ -221,7 +221,7 @@ public final class CartController {
                 }
             } catch let error {
                 if #available(iOS 14.0, *) {
-                    os_log(.error, "Failed to load checkout information: \(error)")
+                    os_log(.fault, "Failed to load checkout information: \(error)")
                 } else {
                     print("Failed to load checkout information: \(error)")
                 }
@@ -275,7 +275,7 @@ public final class CartController {
                     self?.saveCheckoutInfo()
                 } else {
                     if #available(iOS 14.0, *) {
-                        os_log(.error, "Shoppy Error: Could not update cart")
+                        os_log(.fault, "Shoppy Error: Could not update cart")
                     } else {
                         print("Shoppy Error: Could not update cart")
                     }
@@ -307,7 +307,7 @@ public final class CartController {
                     self?.saveCheckoutInfo()
                 } else {
                     if #available(iOS 14.0, *) {
-                        os_log(.error, "Shoppy Error: Could not create cart")
+                        os_log(.fault, "Shoppy Error: Could not create cart")
                     } else {
                         print("Shoppy Error: Could not create cart")
                     }
