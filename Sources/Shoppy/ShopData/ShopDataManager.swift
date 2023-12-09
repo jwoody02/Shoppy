@@ -14,10 +14,11 @@ public class ShopDataManager {
     private var collections: [CollectionViewModel] = []
     private var productsByCollectionId: [String: [ProductViewModel]] = [:]
     private var productCursorByCollection: [String: String?] = [:]
+    private var collectionCursor: String?
+    
+    private var reachedEndOfCollections = false
     private var hasReachedEndOfCollection: [String: Bool?] = [:]
     
-    private var collectionCursor: String?
-    private var reachedEndOfCollections = false
     private let client: Client? = Client.shared
 
 
@@ -107,6 +108,14 @@ public class ShopDataManager {
     // check if already fetched all collections
     public func hasReachedEndOfCollections() -> Bool {
         return self.reachedEndOfCollections
+    }
+    
+    // check if already fetched all products for this collection
+    public func reachedEndOfColletion(collectionId: String) -> Bool {
+        if let hasReachedEnd = hasReachedEndOfCollection[collectionId] as? Bool {
+            return hasReachedEnd
+        }
+        return false
     }
     
     // Function to get products for a specific collection

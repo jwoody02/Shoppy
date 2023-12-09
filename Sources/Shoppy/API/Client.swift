@@ -221,9 +221,9 @@ public final class Client {
     //  MARK: - Products -
     //
     @discardableResult
-    func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, after cursor: String? = nil, completion: @escaping (PageableArray<ProductViewModel>?) -> Void) -> Task {
+    func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, after cursor: String? = nil, filters: [Storefront.ProductFilter] = [], completion: @escaping (PageableArray<ProductViewModel>?) -> Void) -> Task {
         
-        let query = ClientQuery.queryForProducts(in: collection, limit: limit, after: cursor)
+        let query = ClientQuery.queryForProducts(in: collection, limit: limit, after: cursor, filters: filters)
         let task  = self.client.queryGraphWith(query) { (query, error) in
             error.debugPrint()
             
