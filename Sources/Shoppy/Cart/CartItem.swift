@@ -24,7 +24,7 @@ public final class CartItem: Equatable, Hashable, Serializable {
     // ----------------------------------
     //  MARK: - Init -
     //
-    required init(product: ProductViewModel, variant: VariantViewModel, quantity: Int = 1) {
+    required public init(product: ProductViewModel, variant: VariantViewModel, quantity: Int = 1) {
         self.product  = product
         self.variant  = variant
         self.quantity = quantity

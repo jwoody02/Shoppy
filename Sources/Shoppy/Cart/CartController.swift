@@ -397,6 +397,15 @@ public final class CartController {
         }
     }
 
+    public func resetEverything() {
+        self.items = []
+        self.previousItems = []
+        self.checkoutUrl = nil
+        self.checkoutId = nil
+        self.saveCheckoutInfo()
+        self.itemsChanged()
+    }
+    
     private func validateCartItem(_ cartItem: CartItem, completion: @escaping (Bool) -> Void) {
         Client.shared?.fetchProductVariant(id: GraphQL.ID(rawValue: cartItem.variant.id) ) { result in
             switch result {
