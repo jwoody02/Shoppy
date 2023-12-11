@@ -25,7 +25,9 @@ extension Storefront.ProductVariantConnectionQuery {
                 }
                 .availableForSale()
                 .currentlyNotInStock()
-                
+                .image { $0
+                    .url()
+                }
                 .selectedOptions { $0
                     .name()
                     .value()

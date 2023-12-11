@@ -44,6 +44,7 @@ public final class VariantViewModel: ViewModel {
     public let currentlyNotInStock: Bool
 
     public let options: [SelectedOptionViewModel]
+    public let featureImageUrl: URL?
     
     // ----------------------------------
     //  MARK: - Init -
@@ -57,8 +58,8 @@ public final class VariantViewModel: ViewModel {
         self.price  = model.node.price.amount
         
         self.currentlyNotInStock = model.node.currentlyNotInStock
-
         self.options = model.node.selectedOptions.map { SelectedOptionViewModel(from: $0) }
+        self.featureImageUrl = model.node.image?.url
     }
 }
 
