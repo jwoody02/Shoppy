@@ -19,6 +19,7 @@ extension Storefront.ProductConnectionQuery {
             .node { $0
                 .id()
                 .title()
+                .availableForSale()
                 .descriptionHtml()
                 .variants(first: 250) { $0
                     .fragmentForStandardVariant()
