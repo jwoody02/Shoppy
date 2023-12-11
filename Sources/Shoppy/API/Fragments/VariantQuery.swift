@@ -25,6 +25,11 @@ extension Storefront.ProductVariantConnectionQuery {
                 }
                 .availableForSale()
                 .currentlyNotInStock()
+                
+                .selectedOptions { $0
+                    .name()
+                    .value()
+                }
             }
         }
     }

@@ -9,6 +9,27 @@
 import Foundation
 import Buy
 
+public final class SelectedOptionViewModel: ViewModel {
+    
+    public typealias ModelType = Storefront.SelectedOption
+    
+    public let model: ModelType
+    
+    public let name:  String
+    public let value: String
+    
+    // ----------------------------------
+    //  MARK: - Init -
+    //
+    required public init(from model: ModelType) {
+        self.model = model
+        
+        self.name  = model.name
+        self.value = model.value
+    }
+}
+
+
 public final class VariantViewModel: ViewModel {
     
     public typealias ModelType = Storefront.ProductVariantEdge
@@ -21,6 +42,8 @@ public final class VariantViewModel: ViewModel {
     public let price:  Decimal
     
     public let currentlyNotInStock: Bool
+
+    public let options: [SelectedOptionViewModel]
     
     // ----------------------------------
     //  MARK: - Init -
@@ -34,6 +57,8 @@ public final class VariantViewModel: ViewModel {
         self.price  = model.node.price.amount
         
         self.currentlyNotInStock = model.node.currentlyNotInStock
+
+        self.options = model.node.selectedOptions.map { SelectedOptionViewModel(from: $0) }
     }
 }
 
