@@ -20,6 +20,8 @@ public final class VariantViewModel: ViewModel {
     public let title:  String
     public let price:  Decimal
     
+    public let currentlyNotInStock: Bool
+    
     // ----------------------------------
     //  MARK: - Init -
     //
@@ -30,6 +32,8 @@ public final class VariantViewModel: ViewModel {
         self.id     = model.node.id.rawValue
         self.title  = model.node.title
         self.price  = model.node.price.amount
+        
+        self.currentlyNotInStock = model.node.currentlyNotInStock
     }
 }
 

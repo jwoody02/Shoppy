@@ -23,6 +23,8 @@ extension Storefront.ProductVariantConnectionQuery {
                     .amount()
                     .currencyCode()
                 }
+                .availableForSale()
+                .currentlyNotInStock()
             }
         }
     }

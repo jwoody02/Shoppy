@@ -36,6 +36,8 @@ public final class ProductViewModel: ViewModel {
     public let images:   PageableArray<ImageViewModel>
     public let variants: PageableArray<VariantViewModel>
     
+    public let availableForSale: Bool
+    
     // ----------------------------------
     //  MARK: - Init -
     //
@@ -63,6 +65,8 @@ public final class ProductViewModel: ViewModel {
             with:     model.node.variants.edges,
             pageInfo: model.node.variants.pageInfo
         )
+        
+        self.availableForSale = model.node.availableForSale
     }
 }
 
