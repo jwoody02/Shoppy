@@ -27,6 +27,16 @@ extension Storefront.ProductConnectionQuery {
                 .images(first: 250) { $0
                     .fragmentForStandardProductImage()
                 }
+                .compareAtPriceRange { $0
+                    .maxVariantPrice { $0
+                        .amount()
+                        .currencyCode()
+                    }
+                    .minVariantPrice { $0
+                        .amount()
+                        .currencyCode()
+                    }
+                }
             }
         }
     }
