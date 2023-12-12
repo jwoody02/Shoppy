@@ -413,6 +413,27 @@ public final class CartController {
         self.checkoutId = nil
         self.saveCheckoutInfo()
         self.itemsChanged()
+        self.resetCartFile()
+    }
+
+    private func resetCartFile() {
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: self.localCartFile.path) {
+            do {
+                try fileManager.removeItem(at: self.localCartFile)
+                if #available(iOS 14.0, *) {
+                    os_log(.info, "Cart file deleted.")
+                } else {
+                    print("Cart file deleted.")
+                }
+            } catch let error {
+                if #available(iOS 14.0, *) {
+                    os_log(.fault, "Failed to delete cart file: \(error)")
+                } else {
+                    print("Failed to delete cart file: \(error)")
+                }
+            }
+        }
     }
     
     private func validateCartItem(_ cartItem: CartItem, completion: @escaping (Bool) -> Void) {
