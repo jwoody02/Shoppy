@@ -23,6 +23,10 @@ extension Storefront.ProductVariantConnectionQuery {
                     .amount()
                     .currencyCode()
                 }
+                .compareAtPrice { $0
+                    .amount()
+                    .currencyCode()
+                }
                 .availableForSale()
                 .currentlyNotInStock()
                 .image { $0

@@ -257,6 +257,15 @@ public final class CartController {
             }
         }
 
+        // print out modifications array for debugging, print variant id and quantity
+        let debugString = modificationsArray.map { "\($0.quantity) \($0.variant.id)" }.joined(separator: ", ")
+        if #available(iOS 14.0, *) {
+            os_log(.debug, "Submitting modifications array: \(debugString)")
+        } else {
+            // Fallback on earlier versions
+            print("Submitting modifications array: \(debugString)")
+        }
+
         self.previousItems = self.items
         self.setNeedsFlush()
         self.postItemsChangedNotification()

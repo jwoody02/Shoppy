@@ -33,6 +33,7 @@ public final class ProductViewModel: ViewModel {
     public let title:    String
     public let summary:  String
     public let price:    String
+    public let compareToPriceRange: (Decimal, Decimal)
     public let images:   PageableArray<ImageViewModel>
     public let variants: PageableArray<VariantViewModel>
     
@@ -66,6 +67,10 @@ public final class ProductViewModel: ViewModel {
             pageInfo: model.node.variants.pageInfo
         )
         
+        self.compareToPriceRange = (
+            model.node.compareAtPriceRange.minVariantPrice.amount,
+            model.node.compareAtPriceRange.maxVariantPrice.amount
+        )
         self.availableForSale = model.node.availableForSale
     }
 }

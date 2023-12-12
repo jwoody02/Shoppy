@@ -40,6 +40,7 @@ public final class VariantViewModel: ViewModel {
     public let id:     String
     public let title:  String
     public let price:  Decimal
+    public let compareAtPrice: Decimal?
     
     public let currentlyNotInStock: Bool
 
@@ -60,6 +61,8 @@ public final class VariantViewModel: ViewModel {
         self.currentlyNotInStock = model.node.currentlyNotInStock
         self.options = model.node.selectedOptions.map { SelectedOptionViewModel(from: $0) }
         self.featureImageUrl = model.node.image?.url
+        
+        self.compareAtPrice = model.node.compareAtPrice?.amount
     }
 }
 

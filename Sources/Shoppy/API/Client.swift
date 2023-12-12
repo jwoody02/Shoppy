@@ -379,6 +379,11 @@ public final class Client {
         return task
     }
     
+
+    // ----------------------------------
+    //  MARK: - Cart -
+    //
+    
     @discardableResult
     func createCart(with cartItems: [CartItem], buyer identity: Storefront.CartBuyerIdentityInput?, completion: @escaping (String?, URL?) -> Void) -> Task {
         let mutation = ClientQuery.mutationForCreateCart(with: cartItems, buyer: identity)
