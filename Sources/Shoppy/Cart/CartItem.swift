@@ -16,8 +16,8 @@ public final class CartItem: Equatable, Hashable, Serializable {
         static let variant  = "variant"
     }
     
-    let product: ProductViewModel
-    let variant: VariantViewModel
+    public let product: ProductViewModel
+    public let variant: VariantViewModel
     
     var quantity: Int
     
