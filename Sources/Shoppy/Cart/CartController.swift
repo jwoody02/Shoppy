@@ -10,248 +10,176 @@ import Foundation
 import Buy
 import os.log
 
+import Foundation
+import Buy
+import os.log
+
 extension Notification.Name {
-    static let CartControllerItemsDidChange = Notification.Name("CartController.ItemsDidChange")
+    static let cartItemsDidChange = Notification.Name("CartController.itemsDidChange")
+    static let cartStateDidChange = Notification.Name("CartController.stateDidChange")
 }
 
 public final class CartController {
     
+    // MARK: - Singleton Instance
     public static let shared = CartController()
-    
+
+    // MARK: - Properties
     private(set) var items: [CartItem] = []
     private(set) var previousItems: [CartItem] = []
     
     public var subtotal: Decimal {
-        return self.items.reduce(0) {
-            $0 + $1.variant.price * Decimal($1.quantity)
-        }
+        items.reduce(0) { $0 + $1.variant.price * Decimal($1.quantity) }
     }
     
     public var itemCount: Int {
-        return self.items.reduce(0) {
-            $0 + $1.quantity
-        }
+        items.reduce(0) { $0 + $1.quantity }
     }
-    
-    private let ioQueue    = DispatchQueue(label: "com.storefront.writeQueue")
-    private var needsFlush = false
-    private var localCartFile: URL = {
-        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first!
-        let documentsURL  = URL(fileURLWithPath: documentsPath)
-        let cartURL       = documentsURL.appendingPathComponent("\(Client.shared?.config.shopDomain ?? "").json")
-        
-        if #available(iOS 14.0, *) {
-            os_log(.debug, "Cart URL: \(cartURL)")
-        } else {
-            print("Cart URL: \(cartURL)")
-        }
-        
-        return cartURL
-    }()
-    
-    public var checkoutUrl: URL?
-    public var checkoutId: String? {
-        didSet {
-            self.saveCheckoutInfo()
-        }
-    }
-    
+
     public enum CartState {
-        case idle
-        case updating
-        case creatingCheckout
+        case idle, updating, creatingCheckout
     }
 
     public private(set) var state: CartState = .idle {
-        didSet {
-            notifyCartStateChange()
-        }
+        didSet { NotificationCenter.default.post(name: .cartStateDidChange, object: self) }
     }
     
-    // ----------------------------------
-    //  MARK: - Init -
-    //
+    private var checkoutUrl: URL?
+    private var checkoutId: String? {
+        didSet { saveCheckoutInfo() }
+    }
+
+    // MARK: - File Management
+    private let ioQueue = DispatchQueue(label: "com.storefront.cartIOQueue")
+    private var needsFlush = false
+    private var cartFileURL: URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("cart-\(Client.shared?.config.shopDomain ?? "default").json")
+    }
+
+    // MARK: - Initialization
     private init() {
-        self.readCart { items, previousItems, url, id in
-            if let items = items {
-                self.items = items
-            }
-            if let previousItems = previousItems {
-                self.previousItems = previousItems
-            }
-            self.checkoutUrl = url
-            self.checkoutId = id
-            self.postItemsChangedNotification()
-        }
+        loadCart()
     }
     
-    // ----------------------------------
-    //  MARK: - Notifications -
-    //
-    private func postItemsChangedNotification() {
-        let notification = Notification(name: Notification.Name.CartControllerItemsDidChange)
-        NotificationQueue.default.enqueue(notification, postingStyle: .asap)
-    }
-    
-    // ----------------------------------
-    //  MARK: - IO Management -
-    //
-    private func setNeedsFlush() {
-        if !self.needsFlush {
-            self.needsFlush = true
-            
-            DispatchQueue.main.async(execute: self.flush)
+    // MARK: - Public + Cart Operations
+    public func addItem(_ cartItem: CartItem) {
+        if let index = items.firstIndex(of: cartItem) {
+            items[index].quantity += 1
+        } else {
+            items.append(cartItem)
         }
-    }
-    
-    private func ensureCartFileExists() {
-        let fileManager = FileManager.default
-        if !fileManager.fileExists(atPath: self.localCartFile.path) {
-            if #available(iOS 14.0, *) {
-                os_log(.info, "Creating cart file at \(self.localCartFile.path)..")
-            } else {
-                print("Creating cart file..")
-            }
-            if let jsonData = try? JSONSerialization.data(withJSONObject: [], options: []) {
-                fileManager.createFile(atPath: self.localCartFile.path, contents: jsonData, attributes: nil)
-            }
-        }
+        itemsChanged()
     }
 
-
-    private func flush() {
-        let serializedItems = self.items.serialize()
-        let serializedPreviousItems = self.previousItems.serialize() // Serialize previousItems
-        self.ioQueue.async {
-            do {
-                self.ensureCartFileExists()
-                
-                let cartData = [
-                    "items": serializedItems, 
-                    "previousItems": serializedPreviousItems,
-                    "id": self.checkoutId ?? "",
-                    "url": self.checkoutUrl?.absoluteString ?? ""
-                ]
-                let data = try JSONSerialization.data(withJSONObject: cartData, options: [])
-                try data.write(to: self.localCartFile, options: [.atomic])
-                
-                if #available(iOS 14.0, *) {
-                    os_log(.info, "Flushed cart to disk.")
-                } else {
-                    print("Flushed cart to disk.")
-                }
-                
-            } catch let error {
-                if #available(iOS 14.0, *) {
-                    os_log(.fault, "Failed to flush cart to disk: \(error)")
-                } else {
-                    print("Failed to flush cart to disk: \(error)")
-                }
-            }
-            
-            DispatchQueue.main.async {
-                self.needsFlush = false
-            }
-        }
+    public func updateItemQuantity(at index: Int, to quantity: Int) {
+        guard index < items.count else { return }
+        items[index].quantity = quantity
+        itemsChanged()
     }
 
-    private func readCart(completion: @escaping ([CartItem]?, [CartItem]?, URL?, String?) -> Void) {
-        self.ioQueue.async {
-            do {
-                self.ensureCartFileExists()
-                
-                let data = try Data(contentsOf: self.localCartFile)
-                let cartData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-                
-                let cartItems = [CartItem].deserialize(from: cartData?["items"] as? [SerializedRepresentation] ?? [])
-                let previousCartItems = [CartItem].deserialize(from: cartData?["previousItems"] as? [SerializedRepresentation] ?? []) // Deserialize previousItems
-                let cartId = cartData?["id"] as? String
-                let cartUrl = cartData?["url"] as? String
-                if #available(iOS 14.0, *) {
-                    os_log(.info, "Loaded \(cartItems?.count ?? 0) items in cart, current url: \(cartUrl ?? "NONE")")
-                } else {
-                    print("Loaded \(cartItems?.count ?? 0) items in cart, current url: \(cartUrl ?? "NONE")")
-                }
-                DispatchQueue.main.async {
-                    completion(cartItems, previousCartItems, URL(string: cartUrl ?? ""), cartId)
-                }
-                
-            } catch let error {
-                if #available(iOS 14.0, *) {
-                    os_log(.fault, "Failed to load cart from disk: \(error)")
-                } else {
-                    print("Failed to load cart from disk: \(error)")
-                }
-                DispatchQueue.main.async {
-                    completion(nil, nil, nil, nil)
-                }
-            }
-        }
+    public func removeItem(at index: Int) {
+        guard index < items.count else { return }
+        items.remove(at: index)
+        itemsChanged()
     }
 
-    // ----------------------------------
-    //  MARK: - Checkout Info Persistence -
-    //
-    private func saveCheckoutInfo() {
-        self.ioQueue.async {
-            do {
-                var checkoutInfo = [String: String]()
-                if let url = self.checkoutUrl {
-                    checkoutInfo["url"] = url.absoluteString
-                }
-                if let id = self.checkoutId {
-                    checkoutInfo["id"] = id
-                }
-                
-                let data = try JSONSerialization.data(withJSONObject: checkoutInfo, options: [])
-                let checkoutInfoURL = self.localCartFile.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
-                try data.write(to: checkoutInfoURL, options: [.atomic])
-
-                if #available(iOS 14.0, *) {
-                    os_log(.info, "Checkout information saved.")
-                } else {
-                    print("Checkout information saved.")
-                }
-            } catch let error {
-                if #available(iOS 14.0, *) {
-                    os_log(.fault, "Failed to save checkout information: \(error)")
-                } else {
-                    print("Failed to save checkout information: \(error)")
-                }
-            }
-        }
-    }
-    
-    private func readCheckoutInfo() {
-        self.ioQueue.async {
-            let checkoutInfoURL = self.localCartFile.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
-            do {
-                let data = try Data(contentsOf: checkoutInfoURL)
-                if let checkoutInfo = try JSONSerialization.jsonObject(with: data, options: []) as? [String: String] {
-                    DispatchQueue.main.async {
-                        self.checkoutUrl = URL(string: checkoutInfo["url"] ?? "")
-                        self.checkoutId = checkoutInfo["id"]
-                    }
-                }
-            } catch let error {
-                if #available(iOS 14.0, *) {
-                    os_log(.fault, "Failed to load checkout information: \(error)")
-                } else {
-                    print("Failed to load checkout information: \(error)")
-                }
-            }
-        }
+    public func removeAll() {
+        items.removeAll()
+        itemsChanged()
     }
 
-    // ----------------------------------
-    //  MARK: - State Changes -
-    //
+    public func getItems() -> [CartItem] {
+        return items
+    }
+
+    public func getCheckoutUrl() -> URL? {
+        return checkoutUrl
+    }
+
+    public func getCheckoutId() -> String? {
+        return checkoutId
+    }
+
+    // MARK: - Cart State Handling
     private func itemsChanged() {
-        self.state = .updating
+        // Determine modifications in the cart
+        let modificationsArray = determineModifications()
 
-        var modificationsArray: [CartItem] = []
+        // Debugging output
+        debugPrintModifications(modificationsArray)
+
+        // Persist current state
+        previousItems = items
+        flushCartToDisk()
+        NotificationCenter.default.post(name: .cartItemsDidChange, object: self)
+
+        // Update or create checkout based on the current state
+        if let checkoutId = self.checkoutId, !checkoutId.isEmpty {
+            updateExistingCheckout(with: checkoutId, modifications: modificationsArray)
+        } else {
+            createNewCheckout(with: modificationsArray)
+        }
+    }
+
+    // MARK: - Checkout Operations
+    private func updateExistingCheckout(with checkoutId: String, modifications: [CartItem]) {
+        Client.shared?.updateCartLineItems(id: checkoutId, with: modifications) { [weak self] id, url in
+            guard let self = self else { return }
+            if let id = id, let url = url {
+                self.checkoutUrl = url
+                self.checkoutId = id
+                if #available(iOS 14.0, *) {
+                    os_log(.info, "Updated cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
+                } else {
+                    // Fallback on earlier versions
+                    print("Updated cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
+                }
+                self.saveCheckoutInfo()
+            } else {
+                os_log(.fault, "Shoppy Error: Could not update cart")
+            }
+            self.state = .idle
+        }
+    }
+
+    private func createNewCheckout(with modifications: [CartItem]) {
+        self.state = .creatingCheckout
+        var buyerIdentity: Storefront.CartBuyerIdentityInput? = nil
+        if let authToken = AccountManager.shared.currentAuthToken(), authToken != "" {
+            buyerIdentity = .create(customerAccessToken: .value(authToken))
+            if #available(iOS 14.0, *) {
+                os_log(.debug, "Associating cart with customer \(authToken)")
+            } else {
+                // Fallback on earlier versions
+                print("Associating cart with customer \(authToken)")
+            }
+        }
         
-        // Iterate through current items to detect changes and removals
+        Client.shared?.createCart(with: modifications, buyer: buyerIdentity) { [weak self] id, url in
+            guard let self = self else { return }
+            if let id = id, let url = url {
+                self.checkoutUrl = url
+                self.checkoutId = id
+                if #available(iOS 14.0, *) {
+                    os_log(.info, "Created cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
+                } else {
+                    // Fallback on earlier versions
+                    print("Created cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
+                }
+                self.saveCheckoutInfo()
+            } else {
+                os_log(.fault, "Shoppy Error: Could not create cart")
+            }
+            self.state = .idle
+        }
+    }
+
+    // Helper method to determine modifications in the cart
+    private func determineModifications() -> [CartItem] {
+        var modificationsArray: [CartItem] = []
+
+        // Check for changed or new items
         for item in self.items {
             if let previousItem = self.previousItems.first(where: { $0.variant.id == item.variant.id }) {
                 if previousItem.quantity != item.quantity {
@@ -262,7 +190,7 @@ public final class CartController {
             }
         }
 
-        // Detect removed items
+        // Check for removed items
         for previousItem in self.previousItems {
             if !self.items.contains(where: { $0.variant.id == previousItem.variant.id }) {
                 let removedItem = previousItem
@@ -271,210 +199,150 @@ public final class CartController {
             }
         }
 
-        // print out modifications array for debugging, print variant id and quantity
-        let debugString = modificationsArray.map { "\($0.quantity) \($0.variant.id)" }.joined(separator: ", ")
+        return modificationsArray
+    }
+
+    // Helper method for debugging
+    private func debugPrintModifications(_ modifications: [CartItem]) {
+        let debugString = modifications.map { "\($0.variant.id):\($0.quantity)" }.joined(separator: ", ")
         if #available(iOS 14.0, *) {
             os_log(.debug, "Submitting modifications array: \(debugString)")
         } else {
-            // Fallback on earlier versions
             print("Submitting modifications array: \(debugString)")
         }
-
-        self.previousItems = self.items
-        self.setNeedsFlush()
-        self.postItemsChangedNotification()
-        
-        // check if checkout Id is a string and not empty
-        if let checkoutId = self.checkoutId, checkoutId != "" {
-            // Update existing checkout
-            Client.shared?.updateCartLineItems(id: checkoutId, with: modificationsArray) { [weak self] id, url in
-                if let id = id, let url = url {
-                    self?.checkoutUrl = url
-                    self?.checkoutId = id
-                    if #available(iOS 14.0, *) {
-                        os_log(.info, "Updated cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
-                    } else {
-                        print("Updated cart with id '\(id)', saving to disk.")
-                    }
-                    self?.saveCheckoutInfo()
-                } else {
-                    if #available(iOS 14.0, *) {
-                        os_log(.fault, "Shoppy Error: Could not update cart")
-                    } else {
-                        print("Shoppy Error: Could not update cart")
-                    }
-                }
-                self?.state = .idle
-            }
-        } else {
-            self.state = .creatingCheckout
-            var buyerIdentity: Storefront.CartBuyerIdentityInput? = nil
-            if let authToken = AccountManager.shared.currentAuthToken() {
-                buyerIdentity = .create(customerAccessToken: .value(authToken))
-                if #available(iOS 14.0, *) {
-                    os_log(.debug, "Associating cart with customer \(authToken)")
-                } else {
-                    print("Associating cart with customer \(authToken)")
-                }
-            }
-            
-            // Create new checkout
-            Client.shared?.createCart(with: self.items, buyer: buyerIdentity) { [weak self] id, url in
-                if let id = id, let url = url {
-                    self?.checkoutUrl = url
-                    self?.checkoutId = id
-                    if #available(iOS 14.0, *) {
-                        os_log(.info, "Created cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
-                    } else {
-                        print("Created cart with id '\(id)', saving to disk.")
-                    }
-                    self?.saveCheckoutInfo()
-                } else {
-                    if #available(iOS 14.0, *) {
-                        os_log(.fault, "Shoppy Error: Could not create cart")
-                    } else {
-                        print("Shoppy Error: Could not create cart")
-                    }
-                }
-                self?.state = .idle
-            }
-        }
-    }
-    
-    // ----------------------------------
-    //  MARK: - Item Management -
-    //
-    public func updateQuantity(_ quantity: Int, at index: Int) -> Bool {
-        let existingItem = self.items[index]
-        
-        if existingItem.quantity != quantity {
-            existingItem.quantity = quantity
-            
-            self.itemsChanged()
-            return true
-        }
-        return false
-    }
-    
-    public func incrementAt(_ index: Int) {
-        let existingItem = self.items[index]
-        existingItem.quantity += 1
-        
-        self.itemsChanged()
-    }
-    
-    public func decrementAt(_ index: Int) {
-        let existingItem = self.items[index]
-        existingItem.quantity -= 1
-        
-        self.itemsChanged()
-    }
-    
-    public func add(_ cartItem: CartItem) {
-        if let index = self.items.firstIndex(of: cartItem) {
-            self.items[index].quantity += 1
-        } else {
-            self.items.append(cartItem)
-        }
-        
-        self.itemsChanged()
-    }
-    
-    public func removeAllQuantitiesFor(_ cartItem: CartItem) {
-        if let index = self.items.firstIndex(of: cartItem) {
-            self.removeAllQuantities(at: index)
-        }
-    }
-    
-    public func removeAllQuantities(at index: Int) {
-        self.items.remove(at: index)
-        self.itemsChanged()
-    }
-    
-    private func notifyCartStateChange() {
-        NotificationCenter.default.post(name: .CartControllerStateDidChange, object: self)
-    }
-    
-    
-    public func validateCart(completion: @escaping (Bool) -> Void) {
-        guard !self.items.isEmpty else {
-            completion(true)
-            return
-        }
-
-        var isCartValid = true
-        let group = DispatchGroup()
-
-        for item in self.items {
-            group.enter()
-            validateCartItem(item) { isValid in
-                if !isValid {
-                    isCartValid = false
-                    self.removeItem(item)
-                }
-                group.leave()
-            }
-        }
-
-        group.notify(queue: .main) {
-            completion(isCartValid)
-        }
-    }
-    
-    public func getItems() -> [CartItem] {
-        return self.items
     }
 
-    public func resetEverything() {
-        self.items = []
-        self.previousItems = []
-        self.checkoutUrl = nil
-        self.checkoutId = nil
-        self.saveCheckoutInfo()
-        self.itemsChanged()
-        self.resetCartFile()
-    }
+    // MARK: - IO Operations
+    private func flushCartToDisk() {
+        needsFlush = true
+        ioQueue.async {
+            let cartData = CartData(items: self.items, previousItems: self.previousItems, checkoutUrl: self.checkoutUrl, checkoutId: self.checkoutId)
+            let serializedData = cartData.serialize()
 
-    private func resetCartFile() {
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: self.localCartFile.path) {
             do {
-                try fileManager.removeItem(at: self.localCartFile)
-                if #available(iOS 14.0, *) {
-                    os_log(.info, "Cart file deleted.")
-                } else {
-                    print("Cart file deleted.")
-                }
-            } catch let error {
-                if #available(iOS 14.0, *) {
-                    os_log(.fault, "Failed to delete cart file: \(error)")
-                } else {
-                    print("Failed to delete cart file: \(error)")
-                }
+                let data = try JSONSerialization.data(withJSONObject: serializedData, options: [])
+                try data.write(to: self.cartFileURL, options: .atomic)
+                os_log("Cart data saved to disk.")
+            } catch {
+                os_log("Failed to save cart data: %@", type: .error, error.localizedDescription)
             }
+            self.needsFlush = false
         }
     }
-    
-    private func validateCartItem(_ cartItem: CartItem, completion: @escaping (Bool) -> Void) {
-        Client.shared?.fetchProductVariant(id: GraphQL.ID(rawValue: cartItem.variant.id) ) { result in
-            switch result {
-            case .success(let variant):
-                let isValid = variant.availableForSale && variant.currentlyNotInStock == false
-                completion(isValid)
-            case .failure(_):
-                completion(false)
+
+
+    private func loadCart() {
+        ioQueue.async {
+            let fileManager = FileManager.default
+            if !fileManager.fileExists(atPath: self.cartFileURL.path) {
+                os_log("Cart file does not exist. Creating a new one.")
+                self.createInitialCartFile()
+                self.readCartFile()
+            } else {
+                self.readCartFile()
             }
         }
     }
 
-    private func removeItem(_ cartItem: CartItem) {
-        if let index = self.items.firstIndex(of: cartItem) {
-            self.items.remove(at: index)
-            self.itemsChanged()
+    private func createInitialCartFile() {
+        let initialCartData = CartData(items: [], previousItems: [], checkoutUrl: nil, checkoutId: nil)
+        let serializedData = initialCartData.serialize()
+
+        do {
+            let data = try JSONSerialization.data(withJSONObject: serializedData, options: [])
+            try data.write(to: self.cartFileURL, options: .atomic)
+            os_log("New cart file created.")
+        } catch {
+            os_log("Failed to create new cart file: %@", type: .error, error.localizedDescription)
         }
+    }
+
+    private func readCartFile() {
+        do {
+            let data = try Data(contentsOf: self.cartFileURL)
+            guard let serializedData = try JSONSerialization.jsonObject(with: data, options: []) as? SerializedRepresentation,
+                  let cartData = CartData.deserialize(from: serializedData) else {
+                os_log("Failed to deserialize cart data")
+                return
+            }
+
+            self.items = cartData.items
+            self.previousItems = cartData.previousItems
+            self.checkoutUrl = cartData.checkoutUrl
+            self.checkoutId = cartData.checkoutId
+            os_log("Cart data loaded from disk.")
+        } catch {
+            os_log("Failed to load cart data: %@", type: .error, error.localizedDescription)
+        }
+    }
+
+
+
+    private func saveCheckoutInfo() {
+        ioQueue.async {
+            do {
+                let checkoutInfo = CheckoutInfo(url: self.checkoutUrl, id: self.checkoutId)
+                let data = try JSONEncoder().encode(checkoutInfo)
+                let checkoutInfoURL = self.cartFileURL.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
+                try data.write(to: checkoutInfoURL, options: .atomic)
+                os_log("Checkout information saved.")
+            } catch {
+                os_log("Failed to save checkout information: %@", type: .error, error.localizedDescription)
+            }
+        }
+    }
+
+}
+
+// MARK: - Cart Data Structure
+public struct CartData {
+    var items: [CartItem]
+    var previousItems: [CartItem]
+    var checkoutUrl: URL?
+    var checkoutId: String?
+
+    private enum Key {
+        static let items = "items"
+        static let previousItems = "previousItems"
+        static let checkoutUrl = "checkoutUrl"
+        static let checkoutId = "checkoutId"
+    }
+
+    public func serialize() -> SerializedRepresentation {
+        var representation: SerializedRepresentation = [
+            Key.items: items.map { $0.serialize() },
+            Key.previousItems: previousItems.map { $0.serialize() }
+        ]
+
+        if let checkoutUrl = checkoutUrl {
+            representation[Key.checkoutUrl] = checkoutUrl.absoluteString
+        }
+
+        if let checkoutId = checkoutId {
+            representation[Key.checkoutId] = checkoutId
+        }
+
+        return representation
+    }
+
+    public static func deserialize(from representation: SerializedRepresentation) -> CartData? {
+        guard let itemsRepresentation = representation[Key.items] as? [SerializedRepresentation],
+              let previousItemsRepresentation = representation[Key.previousItems] as? [SerializedRepresentation] else {
+            return nil
+        }
+
+        let items = itemsRepresentation.compactMap(CartItem.deserialize)
+        let previousItems = previousItemsRepresentation.compactMap(CartItem.deserialize)
+
+        let checkoutUrl = (representation[Key.checkoutUrl] as? String).flatMap(URL.init)
+        let checkoutId = representation[Key.checkoutId] as? String
+
+        return CartData(items: items, previousItems: previousItems, checkoutUrl: checkoutUrl, checkoutId: checkoutId)
     }
 }
 
-public extension Notification.Name {
-    static let CartControllerStateDidChange = Notification.Name("CartControllerStateDidChange")
+// MARK: - Checkout Info Structure
+struct CheckoutInfo: Codable {
+    var url: URL?
+    var id: String?
 }
