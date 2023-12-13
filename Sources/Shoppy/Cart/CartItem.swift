@@ -60,6 +60,10 @@ public final class CartItem: Equatable, Hashable, Serializable {
             Key.variant  : self.variant.serialize(),
         ]
     }
+    
+    public func getQuantity() -> Int {
+        return self.quantity
+    }
 }
 
 // ----------------------------------
