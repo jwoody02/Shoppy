@@ -167,6 +167,11 @@ public final class CartController {
                 let previousCartItems = [CartItem].deserialize(from: cartData?["previousItems"] as? [SerializedRepresentation] ?? []) // Deserialize previousItems
                 let cartId = cartData?["id"] as? String
                 let cartUrl = cartData?["url"] as? String
+                if #available(iOS 14.0, *) {
+                    os_log(.info, "Loaded \(cartItems?.count ?? 0) items in cart, current url: \(cartUrl ?? "NONE")")
+                } else {
+                    print("Loaded \(cartItems?.count ?? 0) items in cart, current url: \(cartUrl ?? "NONE")")
+                }
                 DispatchQueue.main.async {
                     completion(cartItems, previousCartItems, URL(string: cartUrl ?? ""), cartId)
                 }
@@ -280,7 +285,7 @@ public final class CartController {
         self.postItemsChangedNotification()
         
         // check if checkout Id is a string and not empty
-        if let checkoutId = self.checkoutId, !checkoutId.isEmpty {
+        if let checkoutId = self.checkoutId, checkoutId != "" {
             // Update existing checkout
             Client.shared?.updateCartLineItems(id: checkoutId, with: modificationsArray) { [weak self] id, url in
                 if let id = id, let url = url {
