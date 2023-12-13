@@ -15,8 +15,8 @@ import Buy
 import os.log
 
 extension Notification.Name {
-    static let cartItemsDidChange = Notification.Name("CartController.itemsDidChange")
-    static let cartStateDidChange = Notification.Name("CartController.stateDidChange")
+    public static let cartItemsDidChange = Notification.Name("CartController.itemsDidChange")
+    public static let cartStateDidChange = Notification.Name("CartController.stateDidChange")
 }
 
 public final class CartController {
@@ -123,6 +123,45 @@ public final class CartController {
     }
 
     // MARK: - Checkout Operations
+    public func validateCart(completion: @escaping (Bool) -> Void) {
+        guard !self.items.isEmpty else {
+            completion(true)
+            return
+        }
+
+        var isCartValid = true
+        let group = DispatchGroup()
+
+        for item in self.items {
+            group.enter()
+            validateCartItem(item) { isValid in
+                if !isValid {
+                    isCartValid = false
+                    if let index = self.items.firstIndex(of: item) {
+                        self.removeItem(at: index)
+                    }
+                }
+                group.leave()
+            }
+        }
+
+        group.notify(queue: .main) {
+            completion(isCartValid)
+        }
+    }
+    
+    private func validateCartItem(_ cartItem: CartItem, completion: @escaping (Bool) -> Void) {
+        Client.shared?.fetchProductVariant(id: GraphQL.ID(rawValue: cartItem.variant.id) ) { result in
+            switch result {
+            case .success(let variant):
+                let isValid = variant.availableForSale && variant.currentlyNotInStock == false
+                completion(isValid)
+            case .failure(_):
+                completion(false)
+            }
+        }
+    }
+    
     private func updateExistingCheckout(with checkoutId: String, modifications: [CartItem]) {
         Client.shared?.updateCartLineItems(id: checkoutId, with: modifications) { [weak self] id, url in
             guard let self = self else { return }
