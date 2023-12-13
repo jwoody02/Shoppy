@@ -103,23 +103,11 @@ public final class CartController {
 
     // MARK: - Cart State Handling
     private func itemsChanged() {
-        // Determine modifications in the cart
-        let modificationsArray = determineModifications()
-
-        // Debugging output
-        debugPrintModifications(modificationsArray)
 
         // Persist current state
         previousItems = items
         flushCartToDisk()
         NotificationCenter.default.post(name: .cartItemsDidChange, object: self)
-
-        // Update or create checkout based on the current state
-        if let checkoutId = self.checkoutId, !checkoutId.isEmpty {
-            updateExistingCheckout(with: checkoutId, modifications: modificationsArray)
-        } else {
-            createNewCheckout(with: modificationsArray)
-        }
     }
 
     // MARK: - Checkout Operations
@@ -166,28 +154,8 @@ public final class CartController {
             }
         }
     }
-    
-    private func updateExistingCheckout(with checkoutId: String, modifications: [CartItem]) {
-        Client.shared?.updateCartLineItems(id: checkoutId, with: modifications) { [weak self] id, url in
-            guard let self = self else { return }
-            if let id = id, let url = url {
-                self.checkoutUrl = url
-                self.checkoutId = id
-                if #available(iOS 14.0, *) {
-                    os_log(.info, "Updated cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
-                } else {
-                    // Fallback on earlier versions
-                    print("Updated cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
-                }
-                self.flushCartToDisk()
-            } else {
-                os_log(.fault, "Shoppy Error: Could not update cart")
-            }
-            self.state = .idle
-        }
-    }
 
-    private func createNewCheckout(with modifications: [CartItem]) {
+    public func createNewCheckout(with items: [CartItem], completion: @escaping (URL?) -> Void) {
         self.state = .creatingCheckout
         var buyerIdentity: Storefront.CartBuyerIdentityInput? = nil
         if let authToken = AccountManager.shared.currentAuthToken(), authToken != "" {
@@ -200,7 +168,7 @@ public final class CartController {
             }
         }
         
-        Client.shared?.createCart(with: modifications, buyer: buyerIdentity) { [weak self] id, url in
+        Client.shared?.createCart(with: items, buyer: buyerIdentity) { [weak self] id, url in
             guard let self = self else { return }
             if let id = id, let url = url {
                 self.checkoutUrl = url
@@ -211,51 +179,15 @@ public final class CartController {
                     // Fallback on earlier versions
                     print("Created cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
                 }
-                self.flushCartToDisk()
+                
             } else {
                 os_log(.fault, "Shoppy Error: Could not create cart")
             }
             self.state = .idle
+            completion(url)
         }
     }
-
-    // Helper method to determine modifications in the cart
-    private func determineModifications() -> [CartItem] {
-        var modificationsArray: [CartItem] = []
-
-        // Check for changed or new items
-        for item in self.items {
-            if let previousItem = self.previousItems.first(where: { $0.variant.id == item.variant.id }) {
-                if previousItem.quantity != item.quantity {
-                    modificationsArray.append(item) // changed quantity
-                }
-            } else {
-                modificationsArray.append(item) // new item
-            }
-        }
-
-        // Check for removed items
-        for previousItem in self.previousItems {
-            if !self.items.contains(where: { $0.variant.id == previousItem.variant.id }) {
-                let removedItem = previousItem
-                removedItem.quantity = 0
-                modificationsArray.append(removedItem)
-            }
-        }
-
-        return modificationsArray
-    }
-
-    // Helper method for debugging
-    private func debugPrintModifications(_ modifications: [CartItem]) {
-        let debugString = modifications.map { "\($0.variant.id):\($0.quantity)" }.joined(separator: ", ")
-        if #available(iOS 14.0, *) {
-            os_log(.debug, "Submitting modifications array: \(debugString)")
-        } else {
-            print("Submitting modifications array: \(debugString)")
-        }
-    }
-
+    
     // MARK: - IO Operations
     private func flushCartToDisk() {
         needsFlush = true
