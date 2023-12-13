@@ -408,8 +408,8 @@ public final class Client {
         let task     = self.client.mutateGraphWith(mutation) { response, error in
             error.debugPrint()
             
-            if let checkoutUrl = response?.cartCreate?.cart?.checkoutUrl,
-               let checkoutId = response?.cartCreate?.cart?.id {
+            if let checkoutUrl = response?.cartLinesUpdate?.cart?.checkoutUrl,
+               let checkoutId = response?.cartLinesUpdate?.cart?.id {
                 completion(checkoutId.rawValue, checkoutUrl)
             } else {
                 completion(nil, nil)
