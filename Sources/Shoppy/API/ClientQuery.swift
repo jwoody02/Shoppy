@@ -248,16 +248,17 @@ public final class ClientQuery {
         }
     }
     
-    static func mutationForCartUpdateLineItems(cartid: String, items: [CartItem]) -> Storefront.MutationQuery {
+    static func mutationForCartUpdateLineItems(cartid: GraphQL.ID, items: [CartItem]) -> Storefront.MutationQuery {
         let lineItems = items.map {
             Storefront.CartLineUpdateInput.create(
-                id: GraphQL.ID(rawValue: $0.variant.id),
-                quantity: Input(orNull: Int32($0.quantity))
+                id: GraphQL.ID(rawValue: $0.product.id),
+                quantity: Input(orNull: Int32($0.quantity)),
+                merchandiseId: .value(GraphQL.ID(rawValue: $0.variant.id))
             )
         }
         
         return Storefront.buildMutation { $0
-            .cartLinesUpdate(cartId: GraphQL.ID(rawValue:cartid), lines: lineItems) { $0
+            .cartLinesUpdate(cartId: cartid, lines: lineItems) { $0
                 .cart { $0
                     .id()
                     .checkoutUrl()

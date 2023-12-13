@@ -385,14 +385,14 @@ public final class Client {
     //
     
     @discardableResult
-    func createCart(with cartItems: [CartItem], buyer identity: Storefront.CartBuyerIdentityInput?, completion: @escaping (String?, URL?) -> Void) -> Task {
+    func createCart(with cartItems: [CartItem], buyer identity: Storefront.CartBuyerIdentityInput?, completion: @escaping (GraphQL.ID?, URL?) -> Void) -> Task {
         let mutation = ClientQuery.mutationForCreateCart(with: cartItems, buyer: identity)
         let task     = self.client.mutateGraphWith(mutation) { response, error in
             error.debugPrint()
             
             if let checkoutUrl = response?.cartCreate?.cart?.checkoutUrl,
                let checkoutId = response?.cartCreate?.cart?.id {
-                completion(checkoutId.rawValue, checkoutUrl)
+                completion(checkoutId, checkoutUrl)
             } else {
                 completion(nil, nil)
             }
@@ -403,14 +403,14 @@ public final class Client {
     }
     
     @discardableResult
-    func updateCartLineItems(id: String, with cartItems: [CartItem], completion: @escaping (String?, URL?) -> Void) -> Task {
+    func updateCartLineItems(id: GraphQL.ID, with cartItems: [CartItem], completion: @escaping (GraphQL.ID?, URL?) -> Void) -> Task {
         let mutation = ClientQuery.mutationForCartUpdateLineItems(cartid: id, items: cartItems)
         let task     = self.client.mutateGraphWith(mutation) { response, error in
             error.debugPrint()
             
             if let checkoutUrl = response?.cartLinesUpdate?.cart?.checkoutUrl,
                let checkoutId = response?.cartLinesUpdate?.cart?.id {
-                completion(checkoutId.rawValue, checkoutUrl)
+                completion(checkoutId, checkoutUrl)
             } else {
                 completion(nil, nil)
             }

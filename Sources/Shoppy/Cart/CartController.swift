@@ -45,7 +45,7 @@ public final class CartController {
     }
     
     private var checkoutUrl: URL?
-    private var checkoutId: String? {
+    private var checkoutId: GraphQL.ID? {
         didSet { flushCartToDisk() }
     }
 
@@ -97,7 +97,7 @@ public final class CartController {
         return checkoutUrl
     }
 
-    public func getCheckoutId() -> String? {
+    public func getCheckoutId() -> GraphQL.ID? {
         return checkoutId
     }
 
@@ -115,7 +115,7 @@ public final class CartController {
         NotificationCenter.default.post(name: .cartItemsDidChange, object: self)
 
         // Update or create checkout based on the current state
-        if let checkoutId = self.checkoutId, !checkoutId.isEmpty {
+        if let checkoutId = self.checkoutId, !checkoutId.rawValue.isEmpty {
             updateExistingCheckout(with: checkoutId, modifications: modificationsArray)
         } else {
             createNewCheckout(with: modificationsArray)
@@ -130,15 +130,17 @@ public final class CartController {
         }
 
         var isCartValid = true
+        var modifiedCart = false
         let group = DispatchGroup()
 
         for item in self.items {
             group.enter()
-            validateCartItem(item) { isValid in
+            validateCartItem(item) { [weak self] isValid in
                 if !isValid {
                     isCartValid = false
-                    if let index = self.items.firstIndex(of: item) {
-                        self.removeItem(at: index)
+                    if let index = self?.items.firstIndex(of: item) {
+                        self?.removeItem(at: index)
+                        modifiedCart = true
                     }
                 }
                 group.leave()
@@ -146,6 +148,9 @@ public final class CartController {
         }
 
         group.notify(queue: .main) {
+            if modifiedCart {
+                self.flushCartToDisk()
+            }
             completion(isCartValid)
         }
     }
@@ -162,7 +167,7 @@ public final class CartController {
         }
     }
     
-    private func updateExistingCheckout(with checkoutId: String, modifications: [CartItem]) {
+    private func updateExistingCheckout(with checkoutId: GraphQL.ID, modifications: [CartItem]) {
         Client.shared?.updateCartLineItems(id: checkoutId, with: modifications) { [weak self] id, url in
             guard let self = self else { return }
             if let id = id, let url = url {
@@ -310,10 +315,10 @@ public final class CartController {
             self.checkoutUrl = cartData.checkoutUrl
             self.checkoutId = cartData.checkoutId
             if #available(iOS 14.0, *) {
-                os_log(.info, "Cart '\(self.checkoutId ?? "NONE")' loaded from disk with \(self.items.count) items.")
+                os_log(.info, "Cart '\(self.checkoutId?.rawValue ?? "NONE")' loaded from disk with \(self.items.count) items.")
             } else {
                 // Fallback on earlier versions
-                print("Cart '\(self.checkoutId ?? "NONE")' loaded from disk.")
+                print("Cart '\(self.checkoutId?.rawValue ?? "NONE")' loaded from disk.")
             }
         } catch {
             os_log("Failed to load cart data: %@", type: .error, error.localizedDescription)
@@ -341,7 +346,7 @@ public struct CartData {
     var items: [CartItem]
     var previousItems: [CartItem]
     var checkoutUrl: URL?
-    var checkoutId: String?
+    var checkoutId: GraphQL.ID?
 
     private enum Key {
         static let items = "items"
@@ -377,7 +382,7 @@ public struct CartData {
         let previousItems = previousItemsRepresentation.compactMap(CartItem.deserialize)
 
         let checkoutUrl = (representation[Key.checkoutUrl] as? String).flatMap(URL.init)
-        let checkoutId = representation[Key.checkoutId] as? String
+        let checkoutId = representation[Key.checkoutId] as? GraphQL.ID
 
         return CartData(items: items, previousItems: previousItems, checkoutUrl: checkoutUrl, checkoutId: checkoutId)
     }
