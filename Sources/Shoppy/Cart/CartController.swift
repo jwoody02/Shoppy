@@ -46,7 +46,7 @@ public final class CartController {
     
     private var checkoutUrl: URL?
     private var checkoutId: String? {
-        didSet { saveCheckoutInfo() }
+        didSet { flushCartToDisk() }
     }
 
     // MARK: - File Management
@@ -174,7 +174,7 @@ public final class CartController {
                     // Fallback on earlier versions
                     print("Updated cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
                 }
-                self.saveCheckoutInfo()
+                self.flushCartToDisk()
             } else {
                 os_log(.fault, "Shoppy Error: Could not update cart")
             }
@@ -206,7 +206,7 @@ public final class CartController {
                     // Fallback on earlier versions
                     print("Created cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
                 }
-                self.saveCheckoutInfo()
+                self.flushCartToDisk()
             } else {
                 os_log(.fault, "Shoppy Error: Could not create cart")
             }
@@ -309,27 +309,30 @@ public final class CartController {
             self.previousItems = cartData.previousItems
             self.checkoutUrl = cartData.checkoutUrl
             self.checkoutId = cartData.checkoutId
-            os_log("Cart data loaded from disk.")
+            if #available(iOS 14.0, *) {
+                os_log(.info, "Cart '\(self.checkoutId ?? "NONE")' loaded from disk with \(self.items.count) items.")
+            } else {
+                // Fallback on earlier versions
+                print("Cart '\(self.checkoutId ?? "NONE")' loaded from disk.")
+            }
         } catch {
             os_log("Failed to load cart data: %@", type: .error, error.localizedDescription)
         }
     }
 
-
-
-    private func saveCheckoutInfo() {
-        ioQueue.async {
-            do {
-                let checkoutInfo = CheckoutInfo(url: self.checkoutUrl, id: self.checkoutId)
-                let data = try JSONEncoder().encode(checkoutInfo)
-                let checkoutInfoURL = self.cartFileURL.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
-                try data.write(to: checkoutInfoURL, options: .atomic)
-                os_log("Checkout information saved.")
-            } catch {
-                os_log("Failed to save checkout information: %@", type: .error, error.localizedDescription)
-            }
-        }
-    }
+//    private func saveCheckoutInfo() {
+//        ioQueue.async {
+//            do {
+//                let checkoutInfo = CheckoutInfo(url: self.checkoutUrl, id: self.checkoutId)
+//                let data = try JSONEncoder().encode(checkoutInfo)
+//                let checkoutInfoURL = self.cartFileURL.deletingLastPathComponent().appendingPathComponent("checkoutInfo.json")
+//                try data.write(to: checkoutInfoURL, options: .atomic)
+//                os_log("Checkout information saved.")
+//            } catch {
+//                os_log("Failed to save checkout information: %@", type: .error, error.localizedDescription)
+//            }
+//        }
+//    }
 
 }
 
