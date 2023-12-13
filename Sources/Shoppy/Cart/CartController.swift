@@ -72,13 +72,15 @@ public final class CartController {
     //  MARK: - Init -
     //
     private init() {
-        self.readCart { items, previousItems in
+        self.readCart { items, previousItems, url, id in
             if let items = items {
                 self.items = items
             }
             if let previousItems = previousItems {
                 self.previousItems = previousItems
             }
+            self.checkoutUrl = url
+            self.checkoutId = id
             self.postItemsChangedNotification()
         }
     }
@@ -124,7 +126,12 @@ public final class CartController {
             do {
                 self.ensureCartFileExists()
                 
-                let cartData = ["items": serializedItems, "previousItems": serializedPreviousItems] // Combine items and previousItems
+                let cartData = [
+                    "items": serializedItems, 
+                    "previousItems": serializedPreviousItems,
+                    "id": self.checkoutId ?? "",
+                    "url": self.checkoutUrl?.absoluteString ?? ""
+                ]
                 let data = try JSONSerialization.data(withJSONObject: cartData, options: [])
                 try data.write(to: self.localCartFile, options: [.atomic])
                 
@@ -148,7 +155,7 @@ public final class CartController {
         }
     }
 
-    private func readCart(completion: @escaping ([CartItem]?, [CartItem]?) -> Void) {
+    private func readCart(completion: @escaping ([CartItem]?, [CartItem]?, URL?, String?) -> Void) {
         self.ioQueue.async {
             do {
                 self.ensureCartFileExists()
@@ -158,8 +165,10 @@ public final class CartController {
                 
                 let cartItems = [CartItem].deserialize(from: cartData?["items"] as? [SerializedRepresentation] ?? [])
                 let previousCartItems = [CartItem].deserialize(from: cartData?["previousItems"] as? [SerializedRepresentation] ?? []) // Deserialize previousItems
+                let cartId = cartData?["id"] as? String
+                let cartUrl = cartData?["url"] as? String
                 DispatchQueue.main.async {
-                    completion(cartItems, previousCartItems)
+                    completion(cartItems, previousCartItems, URL(string: cartUrl ?? ""), cartId)
                 }
                 
             } catch let error {
@@ -169,7 +178,7 @@ public final class CartController {
                     print("Failed to load cart from disk: \(error)")
                 }
                 DispatchQueue.main.async {
-                    completion(nil, nil)
+                    completion(nil, nil, nil, nil)
                 }
             }
         }
@@ -270,14 +279,15 @@ public final class CartController {
         self.setNeedsFlush()
         self.postItemsChangedNotification()
         
-        if let checkoutId = self.checkoutId {
+        // check if checkout Id is a string and not empty
+        if let checkoutId = self.checkoutId, !checkoutId.isEmpty {
             // Update existing checkout
             Client.shared?.updateCartLineItems(id: checkoutId, with: modificationsArray) { [weak self] id, url in
                 if let id = id, let url = url {
                     self?.checkoutUrl = url
                     self?.checkoutId = id
                     if #available(iOS 14.0, *) {
-                        os_log(.info, "Updated cart with id '\(id)', saving to disk.")
+                        os_log(.info, "Updated cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
                     } else {
                         print("Updated cart with id '\(id)', saving to disk.")
                     }
@@ -309,7 +319,7 @@ public final class CartController {
                     self?.checkoutUrl = url
                     self?.checkoutId = id
                     if #available(iOS 14.0, *) {
-                        os_log(.info, "Created cart with id '\(id)', saving to disk.")
+                        os_log(.info, "Created cart with id '\(id)' and checkout url '\(url.absoluteString)', saving to disk.")
                     } else {
                         print("Created cart with id '\(id)', saving to disk.")
                     }
@@ -404,6 +414,10 @@ public final class CartController {
         group.notify(queue: .main) {
             completion(isCartValid)
         }
+    }
+    
+    public func getItems() -> [CartItem] {
+        return self.items
     }
 
     public func resetEverything() {
