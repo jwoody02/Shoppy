@@ -8,7 +8,7 @@
 import UIKit
 import WebKit
 
-protocol CheckoutViewDelegate: AnyObject {
+public protocol CheckoutViewDelegate: AnyObject {
     func checkoutViewDidStartNavigation()
     func checkoutViewDidCompleteCheckout()
     func checkoutViewDidFinishNavigation()
@@ -16,11 +16,11 @@ protocol CheckoutViewDelegate: AnyObject {
     func checkoutViewDidFailWithError(error: CheckoutError)
 }
 
-class CheckoutView: WKWebView {
+public class CheckoutView: WKWebView {
 
     private static var cache: CacheEntry?
 
-    static func `for`(checkout url: URL) -> CheckoutView {
+    public static func `for`(checkout url: URL) -> CheckoutView {
         guard checkoutConfiguration.preloading.enabled else {
             CheckoutView.cache = nil
             return CheckoutView()
@@ -46,7 +46,7 @@ class CheckoutView: WKWebView {
 
     // MARK: Properties
 
-    weak var viewDelegate: CheckoutViewDelegate?
+    public weak var viewDelegate: CheckoutViewDelegate?
 
     // MARK: Initializers
 
@@ -64,7 +64,7 @@ class CheckoutView: WKWebView {
 
     // MARK: -
 
-    override func didMoveToSuperview() {
+    public override func didMoveToSuperview() {
         super.didMoveToSuperview()
 
         configuration.userContentController
@@ -76,14 +76,14 @@ class CheckoutView: WKWebView {
         }
     }
 
-    func load(checkout url: URL) {
+    public func load(checkout url: URL) {
         load(URLRequest(url: url))
     }
     
 }
 
 extension CheckoutView: WKScriptMessageHandler {
-    func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+    public func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         do {
             switch try CheckoutBridge.decode(message) {
             case .checkoutComplete:
@@ -102,7 +102,7 @@ extension CheckoutView: WKScriptMessageHandler {
 }
 
 extension CheckoutView: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+    public func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
 
         guard let url = action.request.url else {
             decisionHandler(.allow)
@@ -118,7 +118,7 @@ extension CheckoutView: WKNavigationDelegate {
         decisionHandler(.allow)
     }
 
-    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
+    public func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse, decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void) {
         if let response = navigationResponse.response as? HTTPURLResponse {
             decisionHandler(handleResponse(response))
             return
@@ -144,11 +144,11 @@ extension CheckoutView: WKNavigationDelegate {
         return .allow
     }
 
-    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+    public func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         viewDelegate?.checkoutViewDidStartNavigation()
     }
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         viewDelegate?.checkoutViewDidFinishNavigation()
         // JavaScript to remove the specified selectors
         let js = """
@@ -169,7 +169,7 @@ extension CheckoutView: WKNavigationDelegate {
         }
     }
 
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+    public func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         CheckoutView.cache = nil
         viewDelegate?.checkoutViewDidFailWithError(error: .sdkError(underlying: error))
     }

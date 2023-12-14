@@ -9,11 +9,11 @@ import UIKit
 import WebKit
 
 @available(iOS 13.0, *)
-class CheckoutViewController: UIViewController, UIAdaptivePresentationControllerDelegate {
+public class CheckoutViewController: UIViewController, UIAdaptivePresentationControllerDelegate {
 
     // MARK: Properties
 
-    weak var delegate: CheckoutDelegate?
+    public weak var delegate: CheckoutDelegate?
 
     private let checkoutView: CheckoutView
 
@@ -160,7 +160,7 @@ class CheckoutViewController: UIViewController, UIAdaptivePresentationController
         didCancel()
     }
 
-    internal func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
         didCancel()
     }
 
