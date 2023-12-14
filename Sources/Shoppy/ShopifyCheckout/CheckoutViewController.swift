@@ -41,21 +41,6 @@ public class CheckoutViewController: UIViewController, UIAdaptivePresentationCon
         }
     }()
     
-    private lazy var backButton: UIButton = {
-        let button = UIButton(type: .system)
-        let backIcon = UIImage(systemName: "arrow.backward")?
-            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 10, weight: .bold))
-            .withTintColor(.darkGray, renderingMode: .alwaysOriginal)
-        button.setImage(backIcon, for: .normal)
-        button.addTarget(self, action: #selector(back), for: .touchUpInside)
-        
-        // Set background color and circular shape
-        button.backgroundColor = .lightGray.withAlphaComponent(0.3)
-        button.layer.cornerRadius = 17.5  // Assuming a width and height of 50, adjust as necessary
-        button.clipsToBounds = true  // Ensures the button is clipped to the rounded corners
-        
-        return button
-    }()
 
 
     // MARK: Initializers
@@ -103,40 +88,13 @@ public class CheckoutViewController: UIViewController, UIAdaptivePresentationCon
 
         loadCheckout()
         
-        // Set up and add the back button to the view
-        view.addSubview(backButton)
-                backButton.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            backButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            backButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 10),
-            backButton.widthAnchor.constraint(equalToConstant: 35),
-            backButton.heightAnchor.constraint(equalToConstant: 35)
-        ])
-        
-        NSLayoutConstraint.activate([
-            checkoutView.topAnchor.constraint(equalTo: backButton.bottomAnchor, constant: 10),  // Position under the backButton with 10 points of spacing
+            checkoutView.topAnchor.constraint(equalTo: view.topAnchor),  // Position under the backButton with 10 points of spacing
             checkoutView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             checkoutView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             checkoutView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
-        // Create and configure the label
-        let titleLabel = UILabel()
-        titleLabel.text = "Checkout"
-        titleLabel.font = UIFont.boldSystemFont(ofSize: 18)
-        titleLabel.textColor = .black
-        titleLabel.textAlignment = .center
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-
-        // Add the label to the view
-        view.addSubview(titleLabel)
-
-        // Set up constraints for the label
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 17),
-            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            // ... other constraints as needed ...
-        ])
     }
     
     @objc func back() {
