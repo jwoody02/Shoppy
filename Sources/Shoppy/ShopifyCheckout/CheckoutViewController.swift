@@ -172,13 +172,13 @@ public class CheckoutViewController: UIViewController, UIAdaptivePresentationCon
 @available(iOS 13.0, *)
 extension CheckoutViewController: CheckoutViewDelegate {
 
-    func checkoutViewDidStartNavigation() {
+    public func checkoutViewDidStartNavigation() {
         if initialNavigation {
             spinner.startAnimating()
         }
     }
 
-    func checkoutViewDidFinishNavigation() {
+    public func checkoutViewDidFinishNavigation() {
         spinner.stopAnimating()
         initialNavigation = false
         UIView.animate(withDuration: UINavigationController.hideShowBarDuration) { [weak checkoutView] in
@@ -186,18 +186,18 @@ extension CheckoutViewController: CheckoutViewDelegate {
         }
     }
 
-    func checkoutViewDidCompleteCheckout() {
+    public func checkoutViewDidCompleteCheckout() {
         ConfettiCannon.fire(in: view)
         CheckoutView.invalidate()
         delegate?.checkoutDidComplete()
     }
 
-    func checkoutViewDidFailWithError(error: CheckoutError) {
+    public func checkoutViewDidFailWithError(error: CheckoutError) {
         CheckoutView.invalidate()
         delegate?.checkoutDidFail(error: error)
     }
 
-    func checkoutViewDidClickLink(url: URL) {
+    public func checkoutViewDidClickLink(url: URL) {
         delegate?.checkoutDidClickLink(url: url)
     }
 }
