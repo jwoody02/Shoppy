@@ -30,7 +30,6 @@ public final class ProductViewModel: ViewModel {
     public let cursor:   String
     
     public let id:       String
-    public let handle:   String
     public let title:    String
     public let summary:  String
     public let price:    String
@@ -54,7 +53,6 @@ public final class ProductViewModel: ViewModel {
         let lowestPrice = variants.first?.price
         
         self.id       = model.node.id.rawValue
-        self.handle   = model.node.handle
         self.title    = model.node.title
         self.summary  = model.node.descriptionHtml
         self.price    = lowestPrice == nil ? "No price" : Currency.stringFrom(lowestPrice!)
