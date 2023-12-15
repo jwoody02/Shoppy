@@ -18,6 +18,7 @@ extension Storefront.ProductConnectionQuery {
             .cursor()
             .node { $0
                 .id()
+                .handle()
                 .title()
                 .availableForSale()
                 .descriptionHtml()
