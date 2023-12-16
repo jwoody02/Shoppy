@@ -30,6 +30,7 @@ public final class ProductViewModel: ViewModel {
     public let cursor:   String
     
     public let id:       String
+    public let handle:   String
     public let title:    String
     public let summary:  String
     public let price:    String
@@ -72,6 +73,7 @@ public final class ProductViewModel: ViewModel {
             model.node.compareAtPriceRange.maxVariantPrice.amount
         )
         self.availableForSale = model.node.availableForSale
+        self.handle = model.node.handle
     }
 }
 
