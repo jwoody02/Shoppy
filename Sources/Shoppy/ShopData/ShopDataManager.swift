@@ -12,12 +12,9 @@ public class ShopDataManager {
     public static let shared = ShopDataManager()
 
     private var collections: [CollectionViewModel] = []
-    private var productsByCollectionId: [String: [ProductViewModel]] = [:]
-    private var productCursorByCollection: [String: String?] = [:]
     private var collectionCursor: String?
     
     private var reachedEndOfCollections = false
-    private var hasReachedEndOfCollection: [String: Bool?] = [:]
     
     
     // dictionaries for new query architecture
@@ -54,11 +51,12 @@ public class ShopDataManager {
                 
                 // Initialize product arrays and cursors for each collection
                 collections.items.forEach {
-                    self.productsByCollectionId[$0.id] = []
-                    self.productCursorByCollection[$0.id] = nil
+                    let query = FilteredProductQuery(collectionId: $0.id, filter: .create(), sortKey: .collectionDefault)
+                    self.filteredProductsByQuery[query] = []
+                    self.productCursorByFilteredQuery[query] = nil
                     if $0.products.items.isEmpty == false {
-                        self.productsByCollectionId[$0.id] = $0.products.items
-                        self.productCursorByCollection[$0.id] = $0.products.items.last?.cursor
+                        self.filteredProductsByQuery[query] = $0.products.items
+                        self.productCursorByFilteredQuery[query] = $0.products.items.last?.cursor
                     }
                     
                 }
@@ -115,8 +113,9 @@ public class ShopDataManager {
     }
     
     // Function to get products for a specific collection
-    public func products(in collection: CollectionViewModel) -> [ProductViewModel]? {
-        return productsByCollectionId[collection.id]
+    public func products(in collection: CollectionViewModel, filter: Storefront.ProductFilter, sortBy: Storefront.ProductCollectionSortKeys) -> [ProductViewModel]? {
+        let query = FilteredProductQuery(collectionId: collection.id, filter: filter, sortKey: sortBy)
+        return filteredProductsByQuery[query]
     }
     
     // return the number of collections loaded
@@ -134,9 +133,9 @@ public class ShopDataManager {
     
     public static func resetSharedCollectionDataStore() {
         ShopDataManager.shared.collections = []
-        ShopDataManager.shared.productsByCollectionId = [:]
-        ShopDataManager.shared.productCursorByCollection = [:]
-        ShopDataManager.shared.hasReachedEndOfCollection = [:]
+        ShopDataManager.shared.filteredProductsByQuery = [:]
+        ShopDataManager.shared.productCursorByFilteredQuery = [:]
+        ShopDataManager.shared.hasReachedEndOfFilteredQuery = [:]
         ShopDataManager.shared.collectionCursor = nil
     }
 }
