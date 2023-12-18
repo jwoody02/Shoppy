@@ -100,22 +100,15 @@ public class ShopDataManager {
     }
 
     
-    // check if reached end of collection
-    public func hasReachedEndOfCollection(id collection: String) -> Bool {
-        if let hasReached = self.hasReachedEndOfCollection[collection] {
-            return hasReached ?? false
-        }
-        return false
-    }
-    
     // check if already fetched all collections
     public func hasReachedEndOfCollections() -> Bool {
         return self.reachedEndOfCollections
     }
     
     // check if already fetched all products for this collection
-    public func reachedEndOfColletion(collectionId: String) -> Bool {
-        if let hasReachedEnd = hasReachedEndOfCollection[collectionId] as? Bool {
+    public func hasReachedEndOfCollection(id collection: String, filter: Storefront.ProductFilter = .create(), sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault) -> Bool {
+        let query = FilteredProductQuery(collectionId: collection, filter: filter, sortKey: sortKey)
+        if let hasReachedEnd = hasReachedEndOfFilteredQuery[query] as? Bool {
             return hasReachedEnd
         }
         return false
