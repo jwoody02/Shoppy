@@ -112,12 +112,12 @@ public final class ClientQuery {
         }
     }
     
-    static func queryForProducts(in collection: CollectionViewModel, limit: Int, after cursor: String? = nil, filters: [Storefront.ProductFilter] = []) -> Storefront.QueryRootQuery {
+    static func queryForProducts(in collection: CollectionViewModel, limit: Int, after cursor: String? = nil, filters: [Storefront.ProductFilter] = [], sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault) -> Storefront.QueryRootQuery {
         
         return Storefront.buildQuery { $0
             .node(id: collection.model.node.id) { $0
                 .onCollection { $0
-                    .products(first: Int32(limit), after: cursor, filters: filters) { $0
+                    .products(first: Int32(limit), after: cursor, sortKey: sortKey, filters: filters) { $0
                         .fragmentForStandardProduct()
                     }
                 }

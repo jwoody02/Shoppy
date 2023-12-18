@@ -26,17 +26,6 @@ public struct ClientConfig {
 
 
 public final class Client {
-    /// New Initializable Shared Client
-    /// Usage:
-    ///
-    ///     Client.shared = Client(config:
-    ///         ClientConfig(shopDomain: "graphql.myshopify.com",
-    ///                      apiKey: "8e2fef6daed4b93cf4e731f580799dd1",
-    ///                      merchantID: "merchant.com.your.id",
-    ///                      locale: Locale(identifier: "en-US"))
-    ///     )
-    ///
-    ///
 
 
     public static var shared: Client?
@@ -221,9 +210,9 @@ public final class Client {
     //  MARK: - Products -
     //
     @discardableResult
-    func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, after cursor: String? = nil, filters: [Storefront.ProductFilter] = [], completion: @escaping (PageableArray<ProductViewModel>?) -> Void) -> Task {
+    func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, after cursor: String? = nil,  filters: [Storefront.ProductFilter] = [], sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, completion: @escaping (PageableArray<ProductViewModel>?) -> Void) -> Task {
         
-        let query = ClientQuery.queryForProducts(in: collection, limit: limit, after: cursor, filters: filters)
+        let query = ClientQuery.queryForProducts(in: collection, limit: limit, after: cursor, filters: filters, sortKey: sortKey)
         let task  = self.client.queryGraphWith(query) { (query, error) in
             error.debugPrint()
             

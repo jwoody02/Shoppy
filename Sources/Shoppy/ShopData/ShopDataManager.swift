@@ -19,6 +19,13 @@ public class ShopDataManager {
     private var reachedEndOfCollections = false
     private var hasReachedEndOfCollection: [String: Bool?] = [:]
     
+    
+    // dictionaries for new query architecture
+    private var filteredProductsByQuery: [FilteredProductQuery: [ProductViewModel]] = [:]
+    private var productCursorByFilteredQuery: [FilteredProductQuery: String?] = [:]
+    private var hasReachedEndOfFilteredQuery: [FilteredProductQuery: Bool?] = [:]
+
+    
     private let client: Client? = Client.shared
 
 
@@ -68,34 +75,30 @@ public class ShopDataManager {
 
     // Fetch products within a collection with pagination
     @discardableResult
-    public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String? = nil, completion: @escaping ([ProductViewModel]?) -> Void) -> Task? {
-        var currentCursor = productCursorByCollection[collection.id] ?? nil
+    public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String? = nil, filter: Storefront.ProductFilter = .create(), sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, completion: @escaping ([ProductViewModel]?) -> Void) -> Task? {
+        let query = FilteredProductQuery(collectionId: collection.id, filter: filter, sortKey: sortKey)
+        var currentCursor = productCursorByFilteredQuery[query] ?? nil
         if let cursor = customCursor {
-            if cursor == "" {
-                currentCursor = nil
-            } else {
-                currentCursor = customCursor
-            }
+            currentCursor = cursor.isEmpty ? nil : customCursor
         }
-        return client?.fetchProducts(in: collection, limit: limit, after: currentCursor) { [weak self] result in
+
+        // Modify your client fetch call to include filter and sortKey
+        return client?.fetchProducts(in: collection, after: currentCursor, filters: [filter], sortKey: sortKey) { [weak self] result in
             guard let self = self else { return }
 
-            if let products = result, (self.hasReachedEndOfCollection[collection.id] == nil), shouldSaveToDataStore  {
-                // Append products to the correct collection
-                self.productsByCollectionId[collection.id]?.append(contentsOf: products.items)
-                self.productCursorByCollection[collection.id] = products.items.last?.cursor
-                
-                // reached end of collection
+            if let products = result, (self.hasReachedEndOfFilteredQuery[query] == nil), shouldSaveToDataStore {
+                self.filteredProductsByQuery[query, default: []].append(contentsOf: products.items)
+                self.productCursorByFilteredQuery[query] = products.items.last?.cursor
+
                 if !products.pageInfo.hasNextPage {
-                    self.hasReachedEndOfCollection[collection.id] = true
+                    self.hasReachedEndOfFilteredQuery[query] = true
                 }
-                
             }
-            NotificationCenter.default.post(name: .productsUpdatedNotification, object: nil, userInfo: ["collectionId": collection.id])
-                
+            
             completion(result?.items)
         }
     }
+
     
     // check if reached end of collection
     public func hasReachedEndOfCollection(id collection: String) -> Bool {
