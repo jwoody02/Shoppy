@@ -188,6 +188,26 @@ public final class CartController {
         }
     }
     
+    // MARK: - Cart Reset
+    public func resetCart() {
+        // Clear all items and previous items
+        items.removeAll()
+        previousItems.removeAll()
+
+        // Reset checkout related properties
+        checkoutUrl = nil
+        checkoutId = nil
+
+        // Reset cart state
+        state = .idle
+
+        // Notify observers that the cart items have changed
+        NotificationCenter.default.post(name: .cartItemsDidChange, object: self)
+
+        // Save the reset state to disk
+        flushCartToDisk()
+    }
+    
     // MARK: - IO Operations
     private func flushCartToDisk() {
         needsFlush = true
