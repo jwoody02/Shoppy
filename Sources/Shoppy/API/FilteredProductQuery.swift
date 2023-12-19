@@ -10,10 +10,10 @@ import Buy
 
 // Helper struct for hashing a product fetch
 // based on collectionid, filters, and the sort key
-struct FilteredProductQuery: Hashable {
-    let collectionId: String
-    let filterString: String
-    let sortKey: Storefront.ProductCollectionSortKeys
+public struct FilteredProductQuery: Hashable {
+    public let collectionId: String
+    public let filterString: String
+    public let sortKey: Storefront.ProductCollectionSortKeys
 
     init(collectionId: String, filter: Storefront.ProductFilter, sortKey: Storefront.ProductCollectionSortKeys) {
         self.collectionId = collectionId
@@ -21,13 +21,13 @@ struct FilteredProductQuery: Hashable {
         self.sortKey = sortKey
     }
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(collectionId)
         hasher.combine(filterString)
         hasher.combine(sortKey)
     }
 
-    static func == (lhs: FilteredProductQuery, rhs: FilteredProductQuery) -> Bool {
+    public static func == (lhs: FilteredProductQuery, rhs: FilteredProductQuery) -> Bool {
         return lhs.collectionId == rhs.collectionId &&
                lhs.filterString == rhs.filterString &&
                lhs.sortKey == rhs.sortKey

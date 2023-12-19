@@ -11,9 +11,9 @@ import Buy
 public class ShopDataManager {
     public static let shared = ShopDataManager()
 
+    // product collections
     private var collections: [CollectionViewModel] = []
     private var collectionCursor: String?
-    
     private var reachedEndOfCollections = false
     
     
@@ -23,9 +23,9 @@ public class ShopDataManager {
     private var hasReachedEndOfFilteredQuery: [FilteredProductQuery: Bool?] = [:]
 
     
+    // shared client
     private let client: Client? = Client.shared
-
-
+    
     
     // Fetch collections with pagination
     @discardableResult
@@ -54,6 +54,8 @@ public class ShopDataManager {
                     let query = FilteredProductQuery(collectionId: $0.id, filter: .create(), sortKey: .collectionDefault)
                     self.filteredProductsByQuery[query] = []
                     self.productCursorByFilteredQuery[query] = nil
+
+                    // if products were returned, save them to the data store
                     if $0.products.items.isEmpty == false {
                         self.filteredProductsByQuery[query] = $0.products.items
                         self.productCursorByFilteredQuery[query] = $0.products.items.last?.cursor
@@ -74,13 +76,15 @@ public class ShopDataManager {
     // Fetch products within a collection with pagination
     @discardableResult
     public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String? = nil, filter: Storefront.ProductFilter = .create(), sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, completion: @escaping ([ProductViewModel]?) -> Void) -> Task? {
+        
+        // Define the current query + cursor
         let query = FilteredProductQuery(collectionId: collection.id, filter: filter, sortKey: sortKey)
         var currentCursor = productCursorByFilteredQuery[query] ?? nil
         if let cursor = customCursor {
             currentCursor = cursor.isEmpty ? nil : customCursor
         }
 
-        // Modify your client fetch call to include filter and sortKey
+        // Fetch products based on the current query + cursor
         return client?.fetchProducts(in: collection, after: currentCursor, filters: [filter], sortKey: sortKey) { [weak self] result in
             guard let self = self else { return }
 
@@ -103,8 +107,8 @@ public class ShopDataManager {
         return self.reachedEndOfCollections
     }
     
-    // check if already fetched all products for this collection
-    public func hasReachedEndOfCollection(id collection: String, filter: Storefront.ProductFilter = .create(), sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault) -> Bool {
+    // check if already fetched all products for the passed filtered product query
+    public func hasReachedEndOfCollection(id collection: String, filter: Storefront.ProductFilter, sortKey: Storefront.ProductCollectionSortKeys) -> Bool {
         let query = FilteredProductQuery(collectionId: collection, filter: filter, sortKey: sortKey)
         if let hasReachedEnd = hasReachedEndOfFilteredQuery[query] as? Bool {
             return hasReachedEnd
