@@ -210,9 +210,9 @@ public final class Client {
     //  MARK: - Products -
     //
     @discardableResult
-    func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, after cursor: String? = nil,  filters: [Storefront.ProductFilter] = [], sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, completion: @escaping (PageableArray<ProductViewModel>?) -> Void) -> Task {
+    func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, after cursor: String? = nil,  filters: [Storefront.ProductFilter] = [], sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, shouldReverse: Bool? = nil, completion: @escaping (PageableArray<ProductViewModel>?) -> Void) -> Task {
         
-        let query = ClientQuery.queryForProducts(in: collection, limit: limit, after: cursor, filters: filters, sortKey: sortKey)
+        let query = ClientQuery.queryForProducts(in: collection, limit: limit, after: cursor, filters: filters, sortKey: sortKey, shouldReverse: shouldReverse)
         let task  = self.client.queryGraphWith(query) { (query, error) in
             error.debugPrint()
             

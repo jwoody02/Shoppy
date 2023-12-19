@@ -14,23 +14,27 @@ public struct FilteredProductQuery: Hashable {
     public let collectionId: String
     public let filterString: String
     public let sortKey: Storefront.ProductCollectionSortKeys
+    public let shouldReverseSort: Bool?
 
-    init(collectionId: String, filter: Storefront.ProductFilter, sortKey: Storefront.ProductCollectionSortKeys) {
+    init(collectionId: String, filter: Storefront.ProductFilter, sortKey: Storefront.ProductCollectionSortKeys, shouldReverseSort: Bool? = nil) {
         self.collectionId = collectionId
         self.filterString = FilterHelper.uniqueIdentifier(for: filter)
         self.sortKey = sortKey
+        self.shouldReverseSort = shouldReverseSort
     }
 
     public func hash(into hasher: inout Hasher) {
         hasher.combine(collectionId)
         hasher.combine(filterString)
         hasher.combine(sortKey)
+        hasher.combine(shouldReverseSort)
     }
 
     public static func == (lhs: FilteredProductQuery, rhs: FilteredProductQuery) -> Bool {
         return lhs.collectionId == rhs.collectionId &&
                lhs.filterString == rhs.filterString &&
-               lhs.sortKey == rhs.sortKey
+               lhs.sortKey == rhs.sortKey &&
+               lhs.shouldReverseSort == rhs.shouldReverseSort
     }
 }
 

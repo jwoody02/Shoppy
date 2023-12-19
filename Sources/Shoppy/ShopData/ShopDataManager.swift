@@ -75,17 +75,17 @@ public class ShopDataManager {
 
     // Fetch products within a collection with pagination
     @discardableResult
-    public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String? = nil, filter: Storefront.ProductFilter = .create(), sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, completion: @escaping ([ProductViewModel]?) -> Void) -> Task? {
+    public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String? = nil, filter: Storefront.ProductFilter = .create(), sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, shouldReverse: Bool? = nil, completion: @escaping ([ProductViewModel]?) -> Void) -> Task? {
         
         // Define the current query + cursor
-        let query = FilteredProductQuery(collectionId: collection.id, filter: filter, sortKey: sortKey)
+        let query = FilteredProductQuery(collectionId: collection.id, filter: filter, sortKey: sortKey, shouldReverseSort: shouldReverse)
         var currentCursor = productCursorByFilteredQuery[query] ?? nil
         if let cursor = customCursor {
             currentCursor = cursor.isEmpty ? nil : customCursor
         }
 
         // Fetch products based on the current query + cursor
-        return client?.fetchProducts(in: collection, after: currentCursor, filters: [filter], sortKey: sortKey) { [weak self] result in
+        return client?.fetchProducts(in: collection, after: currentCursor, filters: [filter], sortKey: sortKey, shouldReverse: shouldReverse) { [weak self] result in
             guard let self = self else { return }
 
             if let products = result, (self.hasReachedEndOfFilteredQuery[query] == nil), shouldSaveToDataStore {
