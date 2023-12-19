@@ -108,8 +108,7 @@ public class ShopDataManager {
     }
     
     // check if already fetched all products for the passed filtered product query
-    public func hasReachedEndOfCollection(id collection: String, filter: Storefront.ProductFilter, sortKey: Storefront.ProductCollectionSortKeys) -> Bool {
-        let query = FilteredProductQuery(collectionId: collection, filter: filter, sortKey: sortKey)
+    public func hasReachedEndOfCollection(query: FilteredProductQuery) -> Bool {
         if let hasReachedEnd = hasReachedEndOfFilteredQuery[query] as? Bool {
             return hasReachedEnd
         }
@@ -117,8 +116,7 @@ public class ShopDataManager {
     }
     
     // Function to get products for a specific collection
-    public func products(in collection: CollectionViewModel, filter: Storefront.ProductFilter, sortBy: Storefront.ProductCollectionSortKeys) -> [ProductViewModel]? {
-        let query = FilteredProductQuery(collectionId: collection.id, filter: filter, sortKey: sortBy)
+    public func products(in query: FilteredProductQuery) -> [ProductViewModel]? {
         return filteredProductsByQuery[query]
     }
     
