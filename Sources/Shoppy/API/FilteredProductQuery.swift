@@ -16,7 +16,7 @@ public struct FilteredProductQuery: Hashable {
     public let sortKey: Storefront.ProductCollectionSortKeys
     public let shouldReverseSort: Bool?
 
-    init(collectionId: String, filter: Storefront.ProductFilter, sortKey: Storefront.ProductCollectionSortKeys, shouldReverseSort: Bool? = nil) {
+    public init(collectionId: String, filter: Storefront.ProductFilter, sortKey: Storefront.ProductCollectionSortKeys, shouldReverseSort: Bool? = nil) {
         self.collectionId = collectionId
         self.filterString = FilterHelper.uniqueIdentifier(for: filter)
         self.sortKey = sortKey
