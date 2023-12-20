@@ -12,12 +12,14 @@ import Buy
 // based on collectionid, filters, and the sort key
 public struct FilteredProductQuery: Hashable {
     public let collectionId: String
+    public let filterObject: Storefront.ProductFilter
     public let filterString: String
     public let sortKey: Storefront.ProductCollectionSortKeys
     public let shouldReverseSort: Bool?
 
     public init(collectionId: String, filter: Storefront.ProductFilter, sortKey: Storefront.ProductCollectionSortKeys, shouldReverseSort: Bool? = nil) {
         self.collectionId = collectionId
+        self.filterObject = filter
         self.filterString = FilterHelper.uniqueIdentifier(for: filter)
         self.sortKey = sortKey
         self.shouldReverseSort = shouldReverseSort
