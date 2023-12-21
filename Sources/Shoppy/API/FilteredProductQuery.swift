@@ -38,11 +38,6 @@ public struct FilteredProductQuery: Hashable {
                lhs.sortKey == rhs.sortKey &&
                lhs.shouldReverseSort == rhs.shouldReverseSort
     }
-
-    public func didChangeFilter() {
-        // update filter string
-        self.filterString = FilterHelper.uniqueIdentifier(for: filterObject)
-    }
 }
 
 class FilterHelper {
