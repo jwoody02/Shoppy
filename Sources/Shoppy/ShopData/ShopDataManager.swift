@@ -154,8 +154,7 @@ public class ShopDataManager {
     public func searchForProductsInAllCollections(with searchTerm: String, completion: @escaping ([ProductViewModel]?) -> Void) {
         // fetch the first 50 products in all collections, then filter them based on the search term
         // search title + description for the search term
-        client?.fetchCollections(limit: 50, after: nil, productLimit: 50, productCursor: nil) { [weak self] result in
-            guard let self = self else { return }
+        client?.fetchCollections(limit: 50, after: nil, productLimit: 50, productCursor: nil) { result in
             if let collections = result {
                 var products: [ProductViewModel] = []
                 collections.items.forEach { collection in
