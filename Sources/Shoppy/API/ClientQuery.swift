@@ -111,7 +111,7 @@ public final class ClientQuery {
         }
     }
     
-    static func queryForProducts(in collection: CollectionViewModel, limit: Int, after cursor: String? = nil, filters: [Storefront.ProductFilter] = [], sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, shouldReverse: Bool? = nil, searchQuery: String? = nil) -> Storefront.QueryRootQuery {
+    static func queryForProducts(in collection: CollectionViewModel, limit: Int, after cursor: String? = nil, filters: [Storefront.ProductFilter] = [], sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, shouldReverse: Bool? = nil) -> Storefront.QueryRootQuery {
         
         return Storefront.buildQuery { $0
             .node(id: collection.model.node.id) { $0

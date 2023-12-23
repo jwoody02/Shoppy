@@ -75,10 +75,19 @@ public class ShopDataManager {
 
     // Fetch products within a collection with pagination
     @discardableResult
-    public func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String? = nil, filter: Storefront.ProductFilter = .create(), sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, shouldReverse: Bool? = nil, completion: @escaping ([ProductViewModel]?) -> Void) -> Task? {
+    public func fetchProducts(
+            in collection: CollectionViewModel, limit: Int = 25,
+            shouldSaveToDataStore: Bool = true,
+            customCursor: String? = nil,
+            filter: Storefront.ProductFilter = .create(),
+            sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault,
+            shouldReverse: Bool? = nil,
+            keyword: String? = nil,
+            completion: @escaping ([ProductViewModel]?
+        ) -> Void) -> Task? {
         
         // Define the current query + cursor
-        let query = FilteredProductQuery(collectionId: collection.id, filter: filter, sortKey: sortKey, shouldReverseSort: shouldReverse)
+        let query = FilteredProductQuery(collectionId: collection.id, filter: filter, sortKey: sortKey, shouldReverseSort: shouldReverse, keyword: keyword)
         var currentCursor = productCursorByFilteredQuery[query] ?? nil
         if let cursor = customCursor {
             currentCursor = cursor.isEmpty ? nil : customCursor
@@ -139,6 +148,28 @@ public class ShopDataManager {
         ShopDataManager.shared.productCursorByFilteredQuery = [:]
         ShopDataManager.shared.hasReachedEndOfFilteredQuery = [:]
         ShopDataManager.shared.collectionCursor = nil
+    }
+
+    // MARK: - Search
+    public func searchForProductsInAllCollections(with searchTerm: String, completion: @escaping ([ProductViewModel]?) -> Void) {
+        // fetch the first 50 products in all collections, then filter them based on the search term
+        // search title + description for the search term
+        client?.fetchCollections(limit: 50, after: nil, productLimit: 50, productCursor: nil) { [weak self] result in
+            guard let self = self else { return }
+            if let collections = result {
+                var products: [ProductViewModel] = []
+                collections.items.forEach { collection in
+                    collection.products.items.forEach { product in
+                        if product.title.lowercased().contains(searchTerm.lowercased()) || product.summary.lowercased().contains(searchTerm.lowercased()) {
+                            products.append(product)
+                        }
+                    }
+                }
+                completion(products)
+            } else {
+                completion(nil)
+            }
+        }
     }
 }
 
