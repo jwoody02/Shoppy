@@ -181,35 +181,12 @@ public class ShopDataManager {
         return products
     }
 
-    private func isFuzzyMatch(string: String, with searchTerm: String, threshold: Double = 0.8) -> Bool {
-        let distance = levenshteinDistance(a: string.lowercased(), b: searchTerm.lowercased())
-        let longerLength = max(string.count, searchTerm.count)
-        let similarity = longerLength == 0 ? 1.0 : 1.0 - Double(distance) / Double(longerLength)
-        return similarity >= threshold
-    }
-
-    private func levenshteinDistance(a: String, b: String) -> Int {
-        let a = Array(a)
-        let b = Array(b)
-        var dist = Array(repeating: Array(repeating: 0, count: b.count + 1), count: a.count + 1)
-
-        for i in 0...a.count {
-            for j in 0...b.count {
-                if i == 0 {
-                    dist[i][j] = j
-                } else if j == 0 {
-                    dist[i][j] = i
-                } else {
-                    dist[i][j] = min(
-                        dist[i - 1][j] + 1,
-                        dist[i][j - 1] + 1,
-                        dist[i - 1][j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1)
-                    )
-                }
-            }
-        }
-
-        return dist[a.count][b.count]
+    private func isFuzzyMatch(string: String, with searchTerm: String) -> Bool {
+        let fuse = Fuse()
+        let results = fuse.search(searchTerm, in: string)
+        // You can adjust the score threshold according to your needs.
+        // Lower score means closer match. 0.0 is an exact match.
+        return results?.score ?? 1.0 <= 0.3
     }
 
 
