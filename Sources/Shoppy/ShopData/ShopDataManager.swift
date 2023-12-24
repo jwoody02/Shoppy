@@ -151,25 +151,68 @@ public class ShopDataManager {
     }
 
     // MARK: - Search
+    private var searchCollectionsCache: [String: [CollectionViewModel]] = [:] // Cache for collections
     public func searchForProductsInAllCollections(with searchTerm: String, completion: @escaping ([ProductViewModel]?) -> Void) {
-        // fetch the first 50 products in all collections, then filter them based on the search term
-        // search title + description for the search term
-        client?.fetchCollections(limit: 50, after: nil, productLimit: 50, productCursor: nil) { result in
-            if let collections = result {
-                var products: [ProductViewModel] = []
-                collections.items.forEach { collection in
-                    collection.products.items.forEach { product in
-                        if product.title.lowercased().contains(searchTerm.lowercased()) || product.summary.lowercased().contains(searchTerm.lowercased()) {
-                            products.append(product)
-                        }
-                    }
+        if let cachedCollections = searchCollectionsCache["collections"] {
+            // Use cached data
+            completion(filterProducts(in: cachedCollections, with: searchTerm))
+        } else {
+            // Fetch data and update cache
+            client?.fetchCollections(limit: 50, after: nil, productLimit: 50, productCursor: nil) { result in
+                if let collections = result {
+                    self.searchCollectionsCache["collections"] = collections.items
+                    completion(self.filterProducts(in: collections.items, with: searchTerm))
+                } else {
+                    completion(nil)
                 }
-                completion(products)
-            } else {
-                completion(nil)
             }
         }
     }
+
+    private func filterProducts(in collections: [CollectionViewModel], with searchTerm: String) -> [ProductViewModel] {
+        var products: [ProductViewModel] = []
+        collections.forEach { collection in
+            collection.products.items.forEach { product in
+                if self.isFuzzyMatch(string: product.title, with: searchTerm) || self.isFuzzyMatch(string: product.summary, with: searchTerm) {
+                    products.append(product)
+                }
+            }
+        }
+        return products
+    }
+
+    private func isFuzzyMatch(string: String, with searchTerm: String, threshold: Double = 0.8) -> Bool {
+        let distance = levenshteinDistance(a: string.lowercased(), b: searchTerm.lowercased())
+        let longerLength = max(string.count, searchTerm.count)
+        let similarity = longerLength == 0 ? 1.0 : 1.0 - Double(distance) / Double(longerLength)
+        return similarity >= threshold
+    }
+
+    private func levenshteinDistance(a: String, b: String) -> Int {
+        let a = Array(a)
+        let b = Array(b)
+        var dist = Array(repeating: Array(repeating: 0, count: b.count + 1), count: a.count + 1)
+
+        for i in 0...a.count {
+            for j in 0...b.count {
+                if i == 0 {
+                    dist[i][j] = j
+                } else if j == 0 {
+                    dist[i][j] = i
+                } else {
+                    dist[i][j] = min(
+                        dist[i - 1][j] + 1,
+                        dist[i][j - 1] + 1,
+                        dist[i - 1][j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1)
+                    )
+                }
+            }
+        }
+
+        return dist[a.count][b.count]
+    }
+
+
 }
 
 public extension Notification.Name {
