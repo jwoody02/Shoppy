@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Jordan Wood on 11/27/23.
 //
@@ -15,18 +15,18 @@ public class ShopDataManager {
     private var collections: [CollectionViewModel] = []
     private var collectionCursor: String?
     private var reachedEndOfCollections = false
-    
-    
+
+
     // dictionaries for new query architecture
     private var filteredProductsByQuery: [FilteredProductQuery: [ProductViewModel]] = [:]
     private var productCursorByFilteredQuery: [FilteredProductQuery: String?] = [:]
     private var hasReachedEndOfFilteredQuery: [FilteredProductQuery: Bool?] = [:]
 
-    
+
     // shared client
     private let client: Client? = Client.shared
-    
-    
+
+
     // Fetch collections with pagination
     @discardableResult
     public func fetchCollections(limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String? = nil, completion: @escaping ([CollectionViewModel]?) -> Void) -> Task? {
@@ -40,7 +40,7 @@ public class ShopDataManager {
         }
         return client?.fetchCollections(limit: limit, after: currentCursor, productLimit: 25, productCursor: nil) { [weak self] result in
             guard let self = self else { return }
-            
+
             if let collections = result, !reachedEndOfCollections, shouldSaveToDataStore {
                 self.collections.append(contentsOf: collections.items)
                 if let cursor = collections.items.last?.cursor {
@@ -48,7 +48,7 @@ public class ShopDataManager {
                 } else {
                     self.reachedEndOfCollections = true
                 }
-                
+
                 // Initialize product arrays and cursors for each collection
                 collections.items.forEach {
                     let query = FilteredProductQuery(collectionId: $0.id, filter: .create(), sortKey: .collectionDefault)
@@ -60,11 +60,11 @@ public class ShopDataManager {
                         self.filteredProductsByQuery[query] = $0.products.items
                         self.productCursorByFilteredQuery[query] = $0.products.items.last?.cursor
                     }
-                    
+
                 }
             }
             NotificationCenter.default.post(name: .collectionsUpdatedNotification, object: nil)
-            
+
             if let result = result {
                 completion(result.getItems())
             } else {
@@ -85,7 +85,7 @@ public class ShopDataManager {
             keyword: String? = nil,
             completion: @escaping ([ProductViewModel]?
         ) -> Void) -> Task? {
-        
+
         // Define the current query + cursor
         let query = FilteredProductQuery(collectionId: collection.id, filter: filter, sortKey: sortKey, shouldReverseSort: shouldReverse, keyword: keyword)
         var currentCursor = productCursorByFilteredQuery[query] ?? nil
@@ -105,17 +105,17 @@ public class ShopDataManager {
                     self.hasReachedEndOfFilteredQuery[query] = true
                 }
             }
-            
+
             completion(result?.items)
         }
     }
 
-    
+
     // check if already fetched all collections
     public func hasReachedEndOfCollections() -> Bool {
         return self.reachedEndOfCollections
     }
-    
+
     // check if already fetched all products for the passed filtered product query
     public func hasReachedEndOfCollection(query: FilteredProductQuery) -> Bool {
         if let hasReachedEnd = hasReachedEndOfFilteredQuery[query] as? Bool {
@@ -123,17 +123,17 @@ public class ShopDataManager {
         }
         return false
     }
-    
+
     // Function to get products for a specific collection
     public func products(in query: FilteredProductQuery) -> [ProductViewModel]? {
         return filteredProductsByQuery[query]
     }
-    
+
     // return the number of collections loaded
     public func numberOfCollectionsLoaded() -> Int {
         return self.collections.count
     }
-    
+
     // return optional collection at index
     public func collectionAtIndex(index: Int) -> CollectionViewModel? {
         if index > self.collections.count - 1 {
@@ -141,7 +141,7 @@ public class ShopDataManager {
         }
         return self.collections[index]
     }
-    
+
     public static func resetSharedCollectionDataStore() {
         ShopDataManager.shared.collections = []
         ShopDataManager.shared.filteredProductsByQuery = [:]
@@ -157,8 +157,8 @@ public class ShopDataManager {
             // Use cached data
             completion(filterProducts(in: cachedCollections, with: searchTerm))
         } else {
-            // Fetch data and update cache
-            client?.fetchCollections(limit: 50, after: nil, productLimit: 50, productCursor: nil) { result in
+            // Fetch product data and update cache
+            client?.fetchCollections(limit: 50, after: nil, productLimit: 150, productCursor: nil) { result in
                 if let collections = result {
                     self.searchCollectionsCache["collections"] = collections.items
                     completion(self.filterProducts(in: collections.items, with: searchTerm))
