@@ -10,6 +10,7 @@ import Buy
 
 public final class CollectionViewModel: ViewModel {
     
+    
     public typealias ModelType = Storefront.CollectionEdge
     
     public let model:       ModelType
@@ -37,6 +38,19 @@ public final class CollectionViewModel: ViewModel {
             with:     model.node.products.edges,
             pageInfo: model.node.products.pageInfo
         )
+    }
+    
+    
+
+}
+
+extension CollectionViewModel: Hashable {
+    public static func == (lhs: CollectionViewModel, rhs: CollectionViewModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 

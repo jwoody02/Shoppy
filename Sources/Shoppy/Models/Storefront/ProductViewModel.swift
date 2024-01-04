@@ -10,7 +10,6 @@ import Foundation
 import Buy
 
 struct Currency {
-
     private static let formatter: NumberFormatter = {
         let formatter         = NumberFormatter()
         formatter.numberStyle = .currency
@@ -23,6 +22,7 @@ struct Currency {
 }
 
 public final class ProductViewModel: ViewModel {
+    
     
     public typealias ModelType = Storefront.ProductEdge
     
@@ -74,6 +74,18 @@ public final class ProductViewModel: ViewModel {
         )
         self.availableForSale = model.node.availableForSale
         self.handle = model.node.handle
+    }
+    
+
+}
+
+extension ProductViewModel: Hashable {
+    public static func == (lhs: ProductViewModel, rhs: ProductViewModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 

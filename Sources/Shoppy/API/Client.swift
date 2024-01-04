@@ -40,7 +40,6 @@ public final class Client {
     public init(config: ClientConfig) {
         self.config = config
         self.client = Graph.Client(shopDomain: config.shopDomain, apiKey: config.apiKey, locale: config.locale)
-//        self.client.cachePolicy = .cacheFirst(expireIn: 3600)
     }
     
     public func getClient() -> Graph.Client {

@@ -27,9 +27,23 @@ public class ShopDataManager {
     private let client: Client? = Client.shared
 
 
-    // Fetch collections with pagination
+    /**
+     Fetches collections with pagination.
+
+     - Parameters:
+            [optional]
+         - limit: The maximum number of collections to fetch. Default is 25.
+         - shouldSaveToDataStore: A boolean value indicating whether the fetched collections should be saved to the data store. Default is true.
+         - customCursor: A custom cursor to use for pagination. Default is nil.
+         - completion: A closure that is called when the fetch operation is completed. It takes an optional array of CollectionViewModel as its parameter.
+    */
     @discardableResult
-    public func fetchCollections(limit: Int = 25, shouldSaveToDataStore: Bool = true, customCursor: String? = nil, completion: @escaping ([CollectionViewModel]?) -> Void) -> Task? {
+    public func fetchCollections(
+            limit: Int = 25, 
+            shouldSaveToDataStore: Bool = true, 
+            customCursor: String? = nil, 
+            completion: @escaping ([CollectionViewModel]?) -> Void
+        ) -> Task? {
         var currentCursor = collectionCursor
         if let cursor = customCursor {
             if cursor == "" {
@@ -73,7 +87,23 @@ public class ShopDataManager {
         }
     }
 
-    // Fetch products within a collection with pagination
+    /**
+     Fetches products within a collection with pagination.
+
+     - Parameters:
+          [required]
+         - collection: The collection view model representing the collection.
+
+          [optional]
+         - limit: The maximum number of products to fetch (default is 25).
+         - shouldSaveToDataStore: A boolean value indicating whether the fetched products should be saved to the data store (default is true).
+         - customCursor: A custom cursor to use for fetching products.
+         - filter: The product filter to apply (default is an empty filter).
+         - sortKey: The sort key to use for sorting the products within the collection (default is the collection's default sort key).
+         - shouldReverse: A boolean value indicating whether the products should be sorted in reverse order (default is nil).
+         - keyword: A keyword to filter the products by (default is nil).
+         - completion: A closure that is called when the fetch operation is complete. It takes an optional array of `ProductViewModel` objects as its parameter.
+    */
     @discardableResult
     public func fetchProducts(
             in collection: CollectionViewModel, limit: Int = 25,
@@ -110,6 +140,32 @@ public class ShopDataManager {
         }
     }
 
+    // Custom helper function to fetch CollectionViewModel from a collection handle
+    public func fetchCollectionViewModel(from collectionHandle: String, productLimit:Int = 50, completion: @escaping (CollectionViewModel?) -> Void) {
+        let query = Storefront.buildQuery { $0
+            .collection(handle: collectionHandle) { $0
+                .id()
+                .title()
+                .descriptionHtml()
+                .image { $0
+                    .url()
+                }
+                .handle()
+                .products(first: Int32(productLimit), after: nil) { $0
+                    .fragmentForStandardProduct()
+                }
+            }
+        }
+
+        let task = self.client?.getClient().queryGraphWith(query) { response, error in
+            if let collection = response?.collection {
+                // TODO: - Map results to CollectionViewModel and pass back
+                completion(nil)
+            } else {
+                completion(nil)
+            }
+        }
+    }
 
     // check if already fetched all collections
     public func hasReachedEndOfCollections() -> Bool {
@@ -141,7 +197,16 @@ public class ShopDataManager {
         }
         return self.collections[index]
     }
+    
+    // remove data for collection id
+    public func resetCollectionData(for collectionId: String) {
+        self.collections.removeAll(where: { $0.id == collectionId })
+        self.filteredProductsByQuery = self.filteredProductsByQuery.filter { $0.key.collectionId != collectionId }
+        self.productCursorByFilteredQuery = self.productCursorByFilteredQuery.filter { $0.key.collectionId != collectionId }
+        self.hasReachedEndOfFilteredQuery = self.hasReachedEndOfFilteredQuery.filter { $0.key.collectionId != collectionId }
+    }
 
+    // remove all data from data store
     public static func resetSharedCollectionDataStore() {
         ShopDataManager.shared.collections = []
         ShopDataManager.shared.filteredProductsByQuery = [:]
@@ -150,21 +215,65 @@ public class ShopDataManager {
         ShopDataManager.shared.collectionCursor = nil
     }
 
-    // MARK: - Search
+    // MARK: - Fuzzy Search
+
     private var searchCollectionsCache: [String: [CollectionViewModel]] = [:] // Cache for collections
-    public func searchForProductsInAllCollections(with searchTerm: String, completion: @escaping ([ProductViewModel]?) -> Void) {
+    /**
+     This method searches for products in all collections using a given search term.
+     
+     - Parameters:
+            [required]
+         - searchTerm: The search term to filter the products.
+         - completion: A closure that is called when the search is complete. It takes an optional array of `ProductViewModel` as a parameter.
+     
+    */
+    public func searchForProductsInAllCollections(with searchTerm: String, collectionCountLimit: Int = 150, productLimitPerCollection: Int = 150, completion: @escaping ([ProductViewModel]?) -> Void) {
         if let cachedCollections = searchCollectionsCache["collections"] {
-            // Use cached data
+            // Use cached data to filter and completion
             completion(filterProducts(in: cachedCollections, with: searchTerm))
         } else {
             // Fetch product data and update cache
-            client?.fetchCollections(limit: 50, after: nil, productLimit: 150, productCursor: nil) { result in
+            client?.fetchCollections(limit: collectionCountLimit, after: nil, productLimit: productLimitPerCollection, productCursor: nil) { result in
                 if let collections = result {
-                    self.searchCollectionsCache["collections"] = collections.items
+                    // Update cache, removing duplicate collections
+                    self.searchCollectionsCache["collections"] = Array(Set(collections.items))
+
+                    // filter products and completion
                     completion(self.filterProducts(in: collections.items, with: searchTerm))
                 } else {
+                    // No collections found
                     completion(nil)
                 }
+            }
+        }
+    }
+
+
+    /**
+     Searches for products in a given collection with a specified search term.
+
+     - Parameters:
+            [required]
+        - searchTerm: The search term to match against product titles and summaries.
+        - collection: The collection to search within.
+        
+            [optional]
+        - limit: The maximum number of products to retrieve. Default is 25.
+        - completion: A closure that is called when the search is complete. It takes an optional array of `ProductViewModel` objects as its parameter.
+
+     */
+    public func searchForProductsInCollection(with searchTerm: String, collection: CollectionViewModel, limit: Int = 25, completion: @escaping ([ProductViewModel]?) -> Void) {
+        client?.fetchProducts(in: collection, after: nil, filters: [], sortKey: .collectionDefault, shouldReverse: nil) { result in
+            if let products = result {
+                let filteredProducts = products.items.filter { product in
+                    return self.isFuzzyMatch(string: product.title, with: searchTerm) || self.isFuzzyMatch(string: product.summary, with: searchTerm)
+                }
+
+                // remove duplicate products
+                let filteredProductsSet = Array(Set(filteredProducts))
+                completion(filteredProductsSet)
+            } else {
+                completion(nil)
             }
         }
     }
@@ -184,7 +293,7 @@ public class ShopDataManager {
     private func isFuzzyMatch(string: String, with searchTerm: String) -> Bool {
         let fuse = Fuse()
         let results = fuse.search(searchTerm, in: string)
-        // You can adjust the score threshold according to your needs.
+
         // Lower score means closer match. 0.0 is an exact match.
         return results?.score ?? 1.0 <= 0.3
     }
