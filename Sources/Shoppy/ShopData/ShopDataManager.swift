@@ -270,7 +270,7 @@ public class ShopDataManager {
     public func searchForProductsInCollection(with searchTerm: String, collection: CollectionViewModel, limit: Int = 25, completion: @escaping ([ProductViewModel]?) -> Void) {
         client?.fetchProducts(in: collection, after: nil, filters: [], sortKey: .collectionDefault, shouldReverse: nil) { result in
             if let products = result {
-                if searchTerm.isEmpty {
+                if searchTerm.isEmpty || searchTerm.replacingOccurrences(of: " ", with: "") == "" {
                     // Return all products without filtering
                     completion(products.items)
                 } else {
