@@ -39,9 +39,9 @@ public class ShopDataManager {
     */
     @discardableResult
     public func fetchCollections(
-            limit: Int = 25, 
-            shouldSaveToDataStore: Bool = true, 
-            customCursor: String? = nil, 
+            limit: Int = 25,
+            shouldSaveToDataStore: Bool = true,
+            customCursor: String? = nil,
             completion: @escaping ([CollectionViewModel]?) -> Void
         ) -> Task? {
         var currentCursor = collectionCursor
@@ -197,7 +197,7 @@ public class ShopDataManager {
         }
         return self.collections[index]
     }
-    
+
     // remove data for collection id
     public func resetCollectionData(for collectionId: String) {
         self.collections.removeAll(where: { $0.id == collectionId })
@@ -218,14 +218,19 @@ public class ShopDataManager {
     // MARK: - Fuzzy Search
 
     private var searchCollectionsCache: [String: [CollectionViewModel]] = [:] // Cache for collections
+
+    public func resetSearchCache() {
+        searchCollectionsCache = [:]
+    }
+
     /**
      This method searches for products in all collections using a given search term.
-     
+
      - Parameters:
             [required]
          - searchTerm: The search term to filter the products.
          - completion: A closure that is called when the search is complete. It takes an optional array of `ProductViewModel` as a parameter.
-     
+
     */
     public func searchForProductsInAllCollections(with searchTerm: String, collectionCountLimit: Int = 150, productLimitPerCollection: Int = 150, completion: @escaping ([ProductViewModel]?) -> Void) {
         if let cachedCollections = searchCollectionsCache["collections"] {
@@ -256,7 +261,7 @@ public class ShopDataManager {
             [required]
         - searchTerm: The search term to match against product titles and summaries.
         - collection: The collection to search within.
-        
+
             [optional]
         - limit: The maximum number of products to retrieve. Default is 25.
         - completion: A closure that is called when the search is complete. It takes an optional array of `ProductViewModel` objects as its parameter.
