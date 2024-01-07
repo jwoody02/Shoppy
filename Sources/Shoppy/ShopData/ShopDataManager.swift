@@ -270,13 +270,18 @@ public class ShopDataManager {
     public func searchForProductsInCollection(with searchTerm: String, collection: CollectionViewModel, limit: Int = 25, completion: @escaping ([ProductViewModel]?) -> Void) {
         client?.fetchProducts(in: collection, after: nil, filters: [], sortKey: .collectionDefault, shouldReverse: nil) { result in
             if let products = result {
-                let filteredProducts = products.items.filter { product in
-                    return self.isFuzzyMatch(string: product.title, with: searchTerm) || self.isFuzzyMatch(string: product.summary, with: searchTerm)
-                }
+                if searchTerm.isEmpty {
+                    // Return all products without filtering
+                    completion(products.items)
+                } else {
+                    let filteredProducts = products.items.filter { product in
+                        return self.isFuzzyMatch(string: product.title, with: searchTerm) || self.isFuzzyMatch(string: product.summary, with: searchTerm)
+                    }
 
-                // remove duplicate products
-                let filteredProductsSet = Array(Set(filteredProducts))
-                completion(filteredProductsSet)
+                    // Remove duplicate products
+                    let filteredProductsSet = Array(Set(filteredProducts))
+                    completion(filteredProductsSet)
+                }
             } else {
                 completion(nil)
             }
