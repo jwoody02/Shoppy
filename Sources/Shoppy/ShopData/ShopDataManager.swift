@@ -238,13 +238,19 @@ public class ShopDataManager {
             completion(filterProducts(in: cachedCollections, with: searchTerm))
         } else {
             // Fetch product data and update cache
-            client?.fetchCollections(limit: collectionCountLimit, after: nil, productLimit: productLimitPerCollection, productCursor: nil) { result in
+            client?.fetchCollections(limit: collectionCountLimit, after: nil, productLimit: productLimitPerCollection, productCursor: nil) { [weak self] result in
+                guard let self = self else { return }
                 if let collections = result {
                     // Update cache, removing duplicate collections
-                    self.searchCollectionsCache["collections"] = Array(Set(collections.items))
+                    // TODO: - Sort items so its the same each time
+                    var collections = Array(Set(collections.items))
 
                     // filter products and completion
-                    completion(self.filterProducts(in: collections.items, with: searchTerm))
+                    var filteredProducts = Array(Set(self.filterProducts(in: collections, with: searchTerm)))
+                    filteredProducts.sort { $0.title < $1.title }
+                    self.searchCollectionsCache["collections"] = collections
+                    
+                    completion(filteredProducts)
                 } else {
                     // No collections found
                     completion(nil)
