@@ -141,30 +141,35 @@ public class ShopDataManager {
     }
 
     // Custom helper function to fetch CollectionViewModel from a collection handle
-    public func fetchCollectionViewModel(from collectionHandle: String, productLimit:Int = 50, completion: @escaping (CollectionViewModel?) -> Void) {
-        let query = Storefront.buildQuery { $0
-            .collection(handle: collectionHandle) { $0
-                .id()
-                .title()
-                .descriptionHtml()
-                .image { $0
-                    .url()
-                }
-                .handle()
-                .products(first: Int32(productLimit), after: nil) { $0
-                    .fragmentForStandardProduct()
-                }
-            }
-        }
+    @discardableResult
+    public func fetchCollectionByHandle(
+        from collectionHandle: String,
+        productLimit: Int32 = 50,
+        customCursor: String? = nil,
+        filter: Storefront.ProductFilter = .create(),
+        sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault,
+        shouldReverse: Bool? = nil,
+        keyword: String? = nil,
+        completion: @escaping (CollectionViewModel?
+    ) -> Void) -> Task? {
+        
+        let query = ClientQuery.queryForCollectionWithHandle(
+            handle: collectionHandle,
+            limit: productLimit, after: customCursor,
+            filters: [filter],
+            sortKey: sortKey,
+            shouldReverse: shouldReverse
+        )
 
-        let task = self.client?.getClient().queryGraphWith(query) { response, error in
-            if let collection = response?.collection {
-                // TODO: - Map results to CollectionViewModel and pass back
-                completion(nil)
+       let task = self.client?.getClient().queryGraphWith(query) { response, error in
+           if let collection = response?.collection {
+                completion(CollectionViewModel(collection: collection))
             } else {
                 completion(nil)
             }
         }
+        task?.resume()
+        return task
     }
 
     // check if already fetched all collections
@@ -232,7 +237,12 @@ public class ShopDataManager {
          - completion: A closure that is called when the search is complete. It takes an optional array of `ProductViewModel` as a parameter.
 
     */
-    public func searchForProductsInAllCollections(with searchTerm: String, collectionCountLimit: Int = 150, productLimitPerCollection: Int = 150, completion: @escaping ([ProductViewModel]?) -> Void) {
+    public func searchForProductsInAllCollections(
+        with searchTerm: String,
+        collectionCountLimit: Int = 150,
+        productLimitPerCollection: Int = 150,
+        completion: @escaping ([ProductViewModel]?) -> Void
+    ) {
         if let cachedCollections = searchCollectionsCache["collections"] {
             // Use cached data to filter and completion
             completion(filterProducts(in: cachedCollections, with: searchTerm))
@@ -273,7 +283,12 @@ public class ShopDataManager {
         - completion: A closure that is called when the search is complete. It takes an optional array of `ProductViewModel` objects as its parameter.
 
      */
-    public func searchForProductsInCollection(with searchTerm: String, collection: CollectionViewModel, limit: Int = 25, completion: @escaping ([ProductViewModel]?) -> Void) {
+    public func searchForProductsInCollection(
+        with searchTerm: String,
+        collection: CollectionViewModel,
+        limit: Int = 25,
+        completion: @escaping ([ProductViewModel]?) -> Void
+    ) {
         client?.fetchProducts(in: collection, after: nil, filters: [], sortKey: .collectionDefault, shouldReverse: nil) { result in
             if let products = result {
                 if searchTerm.isEmpty || searchTerm.replacingOccurrences(of: " ", with: "") == "" {
@@ -294,7 +309,10 @@ public class ShopDataManager {
         }
     }
 
-    private func filterProducts(in collections: [CollectionViewModel], with searchTerm: String) -> [ProductViewModel] {
+    private func filterProducts(
+        in collections: [CollectionViewModel],
+        with searchTerm: String
+    ) -> [ProductViewModel] {
         var products: [ProductViewModel] = []
         collections.forEach { collection in
             collection.products.items.forEach { product in

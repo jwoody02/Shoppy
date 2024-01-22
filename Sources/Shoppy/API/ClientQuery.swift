@@ -111,6 +111,23 @@ public final class ClientQuery {
         }
     }
     
+    static func queryForCollectionWithHandle(handle: String, limit: Int32 = 50, after cursor: String? = nil, filters: [Storefront.ProductFilter] = [], sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, shouldReverse: Bool? = nil) -> Storefront.QueryRootQuery {
+        return Storefront.buildQuery { $0
+            .collection(handle: handle) { $0
+                .id()
+                .title()
+                .descriptionHtml()
+                .image { $0
+                    .url()
+                }
+                .handle()
+                .products(first: limit, after: cursor, reverse: shouldReverse, sortKey: sortKey, filters: filters) { $0
+                    .fragmentForStandardProduct()
+                }
+            }
+        }
+    }
+    
     static func queryForProducts(in collection: CollectionViewModel, limit: Int, after cursor: String? = nil, filters: [Storefront.ProductFilter] = [], sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, shouldReverse: Bool? = nil) -> Storefront.QueryRootQuery {
         
         return Storefront.buildQuery { $0

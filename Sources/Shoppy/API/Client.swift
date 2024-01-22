@@ -181,7 +181,12 @@ public final class Client {
     @discardableResult
     func fetchCollections(limit: Int = 25, after cursor: String? = nil, productLimit: Int = 25, productCursor: String? = nil, completion: @escaping (PageableArray<CollectionViewModel>?) -> Void) -> Task {
         
-        let query = ClientQuery.queryForCollections(limit: limit, after: cursor, productLimit: productLimit, productCursor: productCursor)
+        let query = ClientQuery.queryForCollections(
+            limit: limit,
+            after: cursor,
+            productLimit: productLimit,
+            productCursor: productCursor
+        )
         let task  = self.client.queryGraphWith(query) { (query, error) in
             error.debugPrint()
             
