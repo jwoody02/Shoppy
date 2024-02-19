@@ -22,6 +22,7 @@ extension Storefront.ProductConnectionQuery {
                 .availableForSale()
                 .handle()
                 .descriptionHtml()
+                .updatedAt()
                 .variants(first: 250) { $0
                     .fragmentForStandardVariant()
                 }
