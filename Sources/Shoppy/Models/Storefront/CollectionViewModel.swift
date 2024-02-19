@@ -16,7 +16,7 @@ public final class CollectionViewModel: ViewModel {
     public let title:       String
     public let description: String
     public let imageURL:    URL?
-    public let updatedAt:   Date
+//    public let updatedAt:   Date
     public var products:    PageableArray<ProductViewModel>
     
     // ----------------------------------
@@ -36,7 +36,7 @@ public final class CollectionViewModel: ViewModel {
             pageInfo: model.node.products.pageInfo
         )
         
-        self.updatedAt = model.node.updatedAt
+//        self.updatedAt = model.node.updatedAt
     }
     
     // ----------------------------------
@@ -56,7 +56,7 @@ public final class CollectionViewModel: ViewModel {
             pageInfo: model.products.pageInfo
         )
         
-        self.updatedAt = model.updatedAt
+//        self.updatedAt = model.updatedAt
     }
 }
 
