@@ -127,11 +127,11 @@ public class ShopDataManager {
         return client?.fetchProducts(in: collection, after: currentCursor, filters: [filter], sortKey: sortKey, shouldReverse: shouldReverse) { [weak self] result in
             guard let self = self else { return }
 
-            if let products = result, (self.hasReachedEndOfFilteredQuery[query] == nil), shouldSaveToDataStore {
-                self.filteredProductsByQuery[query, default: []].append(contentsOf: products.items)
-                self.productCursorByFilteredQuery[query] = products.items.last?.cursor
+            if let products = result?.getItems(), (self.hasReachedEndOfFilteredQuery[query] == nil), shouldSaveToDataStore {
+                self.filteredProductsByQuery[query, default: []].append(contentsOf: products)
+                self.productCursorByFilteredQuery[query] = products.last?.cursor
 
-                if !products.pageInfo.hasNextPage {
+                if !(result?.hasNextPage ?? false) {
                     self.hasReachedEndOfFilteredQuery[query] = true
                 }
             }
@@ -150,12 +150,19 @@ public class ShopDataManager {
         sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault,
         shouldReverse: Bool? = nil,
         keyword: String? = nil,
+        shouldSaveToDataStore: Bool = true,
         completion: @escaping (CollectionViewModel?
     ) -> Void) -> Task? {
-        
+        // Define the current query + cursor
+        let prodQuery = FilteredProductQuery(collectionId: collectionHandle, filter: filter, sortKey: sortKey, shouldReverseSort: shouldReverse, keyword: keyword)
+        var currentCursor = productCursorByFilteredQuery[prodQuery] ?? nil
+        if let cursor = customCursor {
+            currentCursor = cursor.isEmpty ? nil : customCursor
+        }
         let query = ClientQuery.queryForCollectionWithHandle(
             handle: collectionHandle,
-            limit: productLimit, after: customCursor,
+            limit: productLimit, 
+            after: currentCursor,
             filters: [filter],
             sortKey: sortKey,
             shouldReverse: shouldReverse
@@ -163,7 +170,21 @@ public class ShopDataManager {
 
        let task = self.client?.getClient().queryGraphWith(query) { response, error in
            if let collection = response?.collection {
-                completion(CollectionViewModel(collection: collection))
+                // update cache
+               if (self.hasReachedEndOfFilteredQuery[prodQuery] == nil) && shouldSaveToDataStore {
+                   let products = collection.products
+                   self.filteredProductsByQuery[prodQuery, default: []].append(contentsOf: PageableArray(
+                    with:     products.edges,
+                    pageInfo: products.pageInfo
+                   ).getItems())
+                   self.productCursorByFilteredQuery[prodQuery] = products.edges.last?.cursor
+
+                    if !products.pageInfo.hasNextPage {
+                        self.hasReachedEndOfFilteredQuery[prodQuery] = true
+                    }
+                }
+                
+               completion(CollectionViewModel(from: collection))
             } else {
                 completion(nil)
             }
@@ -257,7 +278,7 @@ public class ShopDataManager {
 
                     // filter products and completion
                     var filteredProducts = Array(Set(self.filterProducts(in: collections, with: searchTerm)))
-                    filteredProducts.sort { $0.title < $1.title }
+                    filteredProducts.sort { $0.updatedAt > $1.updatedAt }
                     self.searchCollectionsCache["collections"] = collections
                     
                     completion(filteredProducts)

@@ -192,7 +192,7 @@ public final class Client {
             
             if let query = query {
                 let collections = PageableArray(
-                    with:     query.collections.edges,
+                    with:     query.collections.edges.map { CollectionViewModel(fromEdge: $0) },
                     pageInfo: query.collections.pageInfo
                 )
                 completion(collections)
@@ -216,7 +216,7 @@ public final class Client {
     @discardableResult
     func fetchProducts(in collection: CollectionViewModel, limit: Int = 25, after cursor: String? = nil,  filters: [Storefront.ProductFilter] = [], sortKey: Storefront.ProductCollectionSortKeys = .collectionDefault, shouldReverse: Bool? = nil, completion: @escaping (PageableArray<ProductViewModel>?) -> Void) -> Task {
         
-        let query = ClientQuery.queryForProducts(in: collection, limit: limit, after: cursor, filters: filters, sortKey: sortKey, shouldReverse: shouldReverse)
+        let query = ClientQuery.queryForProducts(collectionId: GraphQL.ID(rawValue: collection.id) , limit: limit, after: cursor, filters: filters, sortKey: sortKey, shouldReverse: shouldReverse)
         let task  = self.client.queryGraphWith(query) { (query, error) in
             error.debugPrint()
             
@@ -231,9 +231,9 @@ public final class Client {
                 
             } else {
                 if #available(iOS 14.0, *) {
-                    os_log(.fault, "Failed to load products in collection (\(collection.model.node.id.rawValue)): \(String(describing: error))")
+                    os_log(.fault, "Failed to load products in collection: \(String(describing: error))")
                 } else {
-                    print("Failed to load products in collection (\(collection.model.node.id.rawValue)): \(String(describing: error))")
+                    print("Failed to load products in collection: \(String(describing: error))")
                 }
                 completion(nil)
             }

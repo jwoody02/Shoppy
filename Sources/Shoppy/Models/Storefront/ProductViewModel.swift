@@ -39,6 +39,7 @@ public final class ProductViewModel: ViewModel {
     public let variants: PageableArray<VariantViewModel>
     
     public let availableForSale: Bool
+    public let updatedAt:        Date
     
     // ----------------------------------
     //  MARK: - Init -
@@ -74,6 +75,7 @@ public final class ProductViewModel: ViewModel {
         )
         self.availableForSale = model.node.availableForSale
         self.handle = model.node.handle
+        self.updatedAt = model.node.updatedAt
     }
     
 

@@ -9,22 +9,21 @@ import Buy
 
 public final class CollectionViewModel: ViewModel {
     
-    public typealias ModelType = Storefront.CollectionEdge
-    
-    public let model:       ModelType?
+    public let model:       Storefront.Collection
     public let cursor:      String?
     
     public let id:          String
     public let title:       String
     public let description: String
     public let imageURL:    URL?
+    public let updatedAt:   Date
     public var products:    PageableArray<ProductViewModel>
     
     // ----------------------------------
-    //  MARK: - Init With Model -
+    //  MARK: - Init With Collection Edge -
     //
-    required public init(from model: ModelType) {
-        self.model       = model
+    public init(fromEdge model: Storefront.CollectionEdge) {
+        self.model       = model.node
         self.cursor      = model.cursor
         
         self.id          = model.node.id.rawValue
@@ -36,23 +35,28 @@ public final class CollectionViewModel: ViewModel {
             with:     model.node.products.edges,
             pageInfo: model.node.products.pageInfo
         )
+        
+        self.updatedAt = model.node.updatedAt
     }
     
     // ----------------------------------
-    //  MARK: - Convenience Init -
+    //  MARK: - Init With Collection -
     //
-    public init(collection: Storefront.Collection) {
-        self.model       = nil
-        self.cursor      = nil
+    public init(from model: Storefront.Collection) {
+        self.model       = model
+        self.cursor      = nil // individual collection don't have a cursor
         
-        self.id          = collection.id.rawValue
-        self.title       = collection.title
-        self.imageURL    = collection.image?.url
-        self.description = collection.description
+        self.id          = model.id.rawValue
+        self.title       = model.title
+        self.imageURL    = model.image?.url
+        self.description = model.descriptionHtml
+        
         self.products    = PageableArray(
-            with:     collection.products.edges,
-            pageInfo: collection.products.pageInfo
+            with:     model.products.edges,
+            pageInfo: model.products.pageInfo
         )
+        
+        self.updatedAt = model.updatedAt
     }
 }
 
@@ -64,8 +68,4 @@ extension CollectionViewModel: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-}
-
-extension Storefront.CollectionEdge: ViewModeling {
-    public typealias ViewModelType = CollectionViewModel
 }
