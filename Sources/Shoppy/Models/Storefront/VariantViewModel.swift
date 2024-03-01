@@ -58,7 +58,7 @@ public final class VariantViewModel: ViewModel {
         self.title  = model.node.title
         self.price  = model.node.price.amount
         
-        self.currentlyNotInStock = model.node.currentlyNotInStock
+        self.currentlyNotInStock = model.node.currentlyNotInStock || !model.node.availableForSale
         self.options = model.node.selectedOptions.map { SelectedOptionViewModel(from: $0) }
         self.featureImageUrl = model.node.image?.url
         
