@@ -155,10 +155,44 @@ public final class CartController {
         }
     }
 
-    public func createNewCheckout(with items: [CartItem], completion: @escaping (URL?) -> Void) {
+    public static func generateCartBuyerInputFrom(
+        firstName: String = "",
+        lastName: String = "",
+        email: String = "",
+        phone: String = "",
+        address1: String = "",
+        address2: String = "",
+        city: String = "",
+        state: String = "",
+        zip: String = "",
+        country: String = ""
+    ) -> Storefront.CartBuyerIdentityInput {
+        return Storefront.CartBuyerIdentityInput.create(
+            email: .value(email),
+            phone: .value(phone),
+            deliveryAddressPreferences: .value([Storefront.DeliveryAddressInput.create(
+                deliveryAddress: .value(Storefront.MailingAddressInput.create(
+                    address1: .value(address1),
+                    address2: .value(address2),
+                    city: .value(city),
+                    company: .value(""),
+                    country: .value(country),
+                    firstName: .value(firstName),
+                    lastName: .value(lastName),
+                    phone: .value(phone),
+                    province: .value(state),
+                    zip: .value(zip)
+                )
+                )
+            )
+            ])
+        )
+    }
+    
+    public func createNewCheckout(with items: [CartItem], customBuyId: Storefront.CartBuyerIdentityInput? = nil, completion: @escaping (URL?) -> Void) {
         self.state = .creatingCheckout
-        var buyerIdentity: Storefront.CartBuyerIdentityInput? = nil
-        if let authToken = AccountManager.shared.currentAuthToken(), authToken != "" {
+        var buyerIdentity: Storefront.CartBuyerIdentityInput? = customBuyId
+        if let authToken = AccountManager.shared.currentAuthToken(), authToken != "", buyerIdentity == nil {
             buyerIdentity = .create(customerAccessToken: .value(authToken))
             if #available(iOS 14.0, *) {
                 os_log(.debug, "Associating cart with customer \(authToken)")
