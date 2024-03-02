@@ -37,7 +37,7 @@ public final class CartController {
     }
 
     public enum CartState {
-        case idle, updating, creatingCheckout
+        case readingCart, readCart, idle, updating, creatingCheckout
     }
 
     public private(set) var state: CartState = .idle {
@@ -288,6 +288,7 @@ public final class CartController {
     }
 
     private func readCartFile() {
+        state = .readingCart
         do {
             let data = try Data(contentsOf: self.cartFileURL)
             guard let serializedData = try JSONSerialization.jsonObject(with: data, options: []) as? SerializedRepresentation,
@@ -306,6 +307,7 @@ public final class CartController {
                 // Fallback on earlier versions
                 print("Cart '\(self.checkoutId ?? "NONE")' loaded from disk.")
             }
+            state = .readCart
         } catch {
             os_log("Failed to load cart data: %@", type: .error, error.localizedDescription)
         }
