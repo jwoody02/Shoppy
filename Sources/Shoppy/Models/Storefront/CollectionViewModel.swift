@@ -32,7 +32,7 @@ public final class CollectionViewModel: ViewModel {
         self.description = model.node.descriptionHtml
         
         self.products    = PageableArray(
-            with:     model.node.products.edges.filter { $0.node.availableForSale },
+            with:     model.node.products.edges,
             pageInfo: model.node.products.pageInfo
         )
         
@@ -52,7 +52,7 @@ public final class CollectionViewModel: ViewModel {
         self.description = model.descriptionHtml
         
         self.products    = PageableArray(
-            with:     model.products.edges.filter { $0.node.availableForSale },
+            with:     model.products.edges,
             pageInfo: model.products.pageInfo
         )
         
