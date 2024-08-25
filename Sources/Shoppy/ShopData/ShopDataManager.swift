@@ -273,12 +273,20 @@ public class ShopDataManager {
                 guard let self = self else { return }
                 if let collections = result {
                     // Update cache, removing duplicate collections
-                    // TODO: - Sort items so its the same each time
-                    var collections = Array(Set(collections.items))
+                    let collections = Array(Set(collections.items))
 
                     // filter products and completion
                     var filteredProducts = Array(Set(self.filterProducts(in: collections, with: searchTerm)))
-                    filteredProducts.sort { $0.updatedAt > $1.updatedAt }
+                    
+                    let allProducts = collections.flatMap { $0.products.items }
+                    filteredProducts.sort { first, second in
+                        guard let firstIndex = allProducts.firstIndex(where: { $0.id == first.id }),
+                              let secondIndex = allProducts.firstIndex(where: { $0.id == second.id }) else {
+                            return false
+                        }
+                        return firstIndex < secondIndex
+                    }
+                    
                     self.searchCollectionsCache["collections"] = collections
                     
                     completion(filteredProducts)
