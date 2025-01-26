@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Shopify/mobile-buy-sdk-ios.git",
       "state" : {
-        "revision" : "5517ba8113a82f35cc91eddd9567b2184796feb9",
-        "version" : "13.0.0"
+        "revision" : "5c76a102ceeb9ee89fb3d9a98723309dc097754b",
+        "version" : "13.1.1"
       }
     }
   ],

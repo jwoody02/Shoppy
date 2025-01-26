@@ -197,7 +197,7 @@ public final class ClientQuery {
         let quantity = Int32(item.quantity)
         let lineItem = Storefront.CartLineInput.create(merchandiseId: id, quantity: Input(orNull: quantity))
         return Storefront.buildMutation { $0
-            .cartLinesAdd(lines: [lineItem], cartId: GraphQL.ID(rawValue: cartid)) { $0
+          .cartLinesAdd(cartId: GraphQL.ID(rawValue: cartid), lines: [lineItem]) { $0
                 .cart { $0
                     .id()
                     .checkoutUrl()
