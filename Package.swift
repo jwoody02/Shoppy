@@ -12,7 +12,7 @@ let package = Package(
             targets: ["Shoppy"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/Shopify/mobile-buy-sdk-ios.git", from: "13.0.0")
+        .package(url: "https://github.com/Shopify/mobile-buy-sdk-ios.git", from: "2025.4.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
